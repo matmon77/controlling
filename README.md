@@ -12,6 +12,8 @@ Controlling-Werkzeuge am Mac. Privates Repo, angelegt 24.10.2026 beim Umzug der 
 
 Die Apps (alle Macs) haben ihre Quellen in `mac/apps/`; gebaut werden sie beim festen Befehl **„Holen“** von `mac-einrichtung/mac/apps/apps_bauen.sh`. Der Starter „Schnittmenge“ steht in `mac-einrichtung/mac/starter/programme.txt`.
 
+Kurzbefehl „Apofolio – Flyerpreise“ (Mail an apofolio mit der Bitte, die Flyer-Angebote einzuspielen; ruft kein Skript auf): Abbild in `mac/kurzbefehle/README.md`, Master ist der Kurzbefehl.
+
 Die Zubringer verschieben nur Dateien direkt im Quellordner (keine versteckten, keine Unterordner) und überschreiben nichts; liegt eine Datei im Ziel schon, bleibt sie liegen und die App meldet es.
 
 ## Voraussetzungen je Mac
