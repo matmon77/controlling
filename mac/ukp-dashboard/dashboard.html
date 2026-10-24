@@ -1,0 +1,2666 @@
+<!DOCTYPE html>
+
+<html lang="de">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>Controlling Dashboard</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+    :root{
+      --bg: #0b1220;
+      --panel: rgba(255,255,255,0.06);
+      --text: rgba(255,255,255,0.92);
+      --muted: rgba(255,255,255,0.68);
+      --border: rgba(255,255,255,0.10);
+      --shadow: 0 12px 40px rgba(0,0,0,0.35);
+      --radius: 18px;
+      --radius2: 14px;
+    }
+    *{box-sizing:border-box}
+    html, body {
+  height: auto;
+  min-height: 100%;
+}
+
+    body{
+      margin:0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:
+        radial-gradient(1200px 600px at 12% 8%, rgba(125, 211, 252, 0.20), transparent 55%),
+        radial-gradient(900px 500px at 82% 22%, rgba(134, 239, 172, 0.14), transparent 50%),
+        radial-gradient(1200px 700px at 55% 95%, rgba(167, 139, 250, 0.12), transparent 55%),
+        var(--bg);
+      color: var(--text);
+    }
+    .wrap{max-width:1200px; margin:0 auto; padding:22px 18px 28px;}
+    .topbar{
+      background: var(--panel);
+      border:1px solid var(--border);
+      box-shadow: var(--shadow);
+      border-radius: var(--radius);
+      padding:16px 20px;
+      backdrop-filter: blur(10px);
+      margin-bottom:12px;
+    }
+    .header-grid{
+      display:grid;
+      grid-template-columns: minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);
+      align-items:center;
+      gap:16px;
+      width:100%;
+    }
+    .header-left,.header-center,.header-right{display:flex; align-items:center; padding-right: 2px;}
+    .header-left{justify-content:flex-start}
+    .header-center{justify-content:center}
+    .header-right{justify-content:flex-end}
+
+    /* Logo + Title sizing */
+    .logo svg{
+      height:72px;
+      width:auto;
+      display:block;
+    }
+            .header-title{
+      margin:0;
+      font-size:32px;
+      font-weight:700;
+      letter-spacing:0.4px;
+      line-height:1.15;     /* prevent clipping of descenders like 'g' */
+      padding-bottom: 2px;  /* extra breathing room */
+      white-space:nowrap;
+      text-align:center;
+      width:100%;
+    }
+
+    .btn{
+      cursor:pointer;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      border-radius: 12px;
+      padding:10px 12px;
+      font-weight:700;
+      font-size:13px;
+      transition: transform .08s ease, background .2s ease;
+      white-space:nowrap;
+    }
+    .btn:hover{background: rgba(255,255,255,0.10)}
+    .btn:active{transform: scale(0.98)}
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:12px;
+    }
+    @media (min-width: 980px){
+      .grid{ grid-template-columns: 380px 1fr; }
+    }
+    .card{
+      background: var(--panel);
+      border:1px solid var(--border);
+      box-shadow: var(--shadow);
+      border-radius: var(--radius);
+      padding:14px;
+      backdrop-filter: blur(10px);
+    }
+    .card h2{
+      margin:0 0 10px 0;
+      font-size:14px;
+      color: rgba(255,255,255,0.85);
+      font-weight:700;
+      letter-spacing:0.3px;
+      text-transform: uppercase;
+    }
+    label{font-size:12px; color: var(--muted); display:block; margin:0 0 6px 2px;}
+    select, input[type="date"]{
+      width:100%;
+      padding:10px 10px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.05);
+      color: var(--text);
+      outline: none;
+    }
+    select[multiple]{height: 132px;}
+    .controls{display:flex; flex-direction:column; gap:10px;}
+    .row{display:grid; grid-template-columns: 1fr 1fr; gap:10px;}
+    .toggles{display:flex; gap:8px; flex-wrap:wrap;}
+    .toggle{
+      cursor:pointer;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,0.05);
+      border-radius: 999px;
+      padding:8px 10px;
+      font-weight:700;
+      font-size:13px;
+      color: var(--muted);
+      user-select:none;
+      white-space:nowrap;
+    }
+    .toggle.active{
+      background: rgba(125, 211, 252, 0.16);
+      color: var(--text);
+      border-color: rgba(125, 211, 252, 0.30);
+    }
+    .kpis{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+      margin-top: 10px;
+    }
+    .kpi{
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: var(--radius2);
+      padding: 10px;
+    }
+    .kpi .k{font-size:12px; color:var(--muted)}
+    .kpi .v{font-size:18px; font-weight:800; margin-top:4px}
+    .kpi .d{font-size:12px; color:var(--muted); margin-top:4px}
+
+    .chartwrap{padding: 6px 10px 12px 10px;}
+    #chart{height: 520px; width: 100%;}
+
+    .footer{
+      margin-top:12px;
+      background: rgba(255,255,255,0.04);
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      padding:10px 12px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      color: var(--muted);
+      font-size:12px;
+    }
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 10px;
+      border:1px solid var(--border);
+      border-radius:999px;
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(8px);
+      white-space:nowrap;
+    }
+    .pill strong{color:var(--text); font-weight:700}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;}
+    .small{font-size:12px; color: var(--muted); line-height:1.4;}
+  
+    
+    .header-left,.header-center,.header-right{min-width:0;}
+    .header-right{padding-right:6px;}
+
+  
+    /* --- Header: 3 equal containers, no overlap --- */
+    .header-grid{
+      display:grid;
+      grid-template-columns: 2fr 2fr 1fr; /* 3 gleich große Bereiche */
+      align-items:center;
+      gap:20px;
+      width:100%;
+    }
+    .header-left,.header-center,.header-right{
+      min-width:0;
+      overflow:hidden;
+      display:flex;
+      align-items:center;
+    }
+    .header-left{justify-content:flex-start;}
+    .header-center{justify-content:center;}
+    .header-right{justify-content:flex-end;}
+
+    .logo{
+      width:100%;
+      max-width:100%;
+      color: rgba(255,255,255,0.95);
+    }
+    .logo svg{
+      height:72px;
+      width:auto;
+      max-width:100%;
+      display:block;
+    }
+
+        .header-title{
+      margin:0;
+      font-size:32px;
+      font-weight:700;
+      letter-spacing:0.4px;
+      line-height:1;
+      white-space:nowrap;
+      text-align:center;
+      width:100%;
+    }
+
+  
+    /* Tabs */
+    .tabs{
+      display:flex;
+      gap:10px;
+      margin: 6px 0 12px 0;
+      padding: 6px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.04);
+      width: fit-content;
+    }
+    .tab{
+      cursor:pointer;
+      user-select:none;
+      padding:10px 14px;
+      border-radius: 999px;
+      font-weight:800;
+      font-size:13px;
+      color: var(--muted);
+      border: 1px solid transparent;
+      white-space:nowrap;
+    }
+    .tab.active{
+      color: var(--text);
+      background: rgba(125, 211, 252, 0.16);
+      border-color: rgba(125, 211, 252, 0.30);
+    }
+    .main-panel{display:none;}
+    .main-panel.active{display:block;}
+    .panel-note{
+      margin: 10px 0 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+  
+    .tabs.tabs-global{
+      width: 100%;
+      justify-content: center;
+    }
+
+  
+    .footerbar{ margin-top: 14px; }
+    .footer-global{ width:100%; }
+
+  
+    /* Chart switch (inside Packungen) */
+    .chart-switch{
+      display:flex;
+      gap:10px;
+      justify-content:flex-end;
+      margin: 0 0 10px 0;
+      flex-wrap: wrap;
+    }
+    .btn.btn-small{
+      padding:8px 10px;
+      font-size:12px;
+      border-radius: 999px;
+      font-weight:800;
+    }
+    .btn.btn-small.active{
+      background: rgba(125, 211, 252, 0.16);
+      border-color: rgba(125, 211, 252, 0.30);
+    }
+    #chart, #chart2{height: 520px; width: 100%;}
+
+  
+/* Chart mode (Summe vs Apothekenvergleich) - UI only for now */
+.chart-topline{display:flex; justify-content:space-between; align-items:center; gap:12px; margin:8px 0 10px 0; flex-wrap:wrap;}
+.chart-mode{display:flex; gap:8px; align-items:center;}
+
+
+.compare-hint{
+  margin-top:12px;
+  padding:8px 12px;
+  border:1px solid rgba(255,255,255,0.14);
+  background:rgba(255,255,255,0.04);
+  border-radius:12px;
+  font-size:0.90rem;
+  color:rgba(255,255,255,0.75);
+}
+
+.chart-desc{
+  margin-top:12px;
+  padding:10px 12px;
+  border:1px solid rgba(255,255,255,0.14);
+  background:rgba(255,255,255,0.04);
+  border-radius:12px;
+}
+.chart-desc-line{
+  font-size:0.95rem;
+  color:rgba(255,255,255,0.78);
+  line-height:1.3;
+}
+.chart-desc-line2{
+  margin-top:4px;
+  font-size:0.88rem;
+  color:rgba(255,255,255,0.62);
+  line-height:1.3;
+}
+
+
+  /* Kennzahlen-Leiste (aus Filter herausgelöst) */
+  .kpiBar{ margin-top: 12px; }
+  .kpiBar-inner{
+    display:flex;
+    gap:16px;
+    align-items:flex-start;
+    flex-wrap:wrap;
+    padding:10px 12px;
+    border:1px solid rgba(255,255,255,0.10);
+    border-radius:14px;
+    background: rgba(255,255,255,0.02);
+  }
+  .kpiBar-inner > div{ min-width:260px; flex: 1 1 260px; }
+  .kpiBar-inner .kpis{ margin-top:0; }
+
+
+  /* 2x2 Dashboard Layout helpers */
+  .grid{ align-items: start; }
+  #weekdayChart{ width:100%; }
+
+  /* Stabilize card heights to reduce layout jumpiness */
+  .grid{
+    align-items: stretch;
+  }
+  .grid > .card{
+    min-height: 340px;
+  }
+  /* Top row: filters + main chart */
+  .grid > .card:nth-child(1){ min-height: 460px; }
+  .grid > .card:nth-child(2){ min-height: 560px; }
+  /* Bottom row: KPIs + weekday chart placeholder */
+  .grid > .card:nth-child(3){ min-height: 320px; }
+  .grid > .card:nth-child(4){ min-height: 420px; }
+
+  /* Fix chart description box height (avoid layout jump) */
+  .chart-desc{
+    min-height: 112px; /* approx. fits up to 4 lines */
+    display: block;
+  }
+  .chart-desc-line, .chart-desc-line2{
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .chart-desc-line{ -webkit-line-clamp: 2; }
+  .chart-desc-line2{ -webkit-line-clamp: 2; }
+
+
+  .kpiBar--accent{
+    position: relative;
+    background: rgba(255,255,255,0.04);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.10);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+  }
+  .kpiBar--accent::before{
+    content: "";
+    position: absolute;
+    left: 14px;
+    right: 14px;
+    top: 10px;
+    height: 2px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(255,209,0,0.0), rgba(255,209,0,0.55), rgba(255,209,0,0.0));
+    pointer-events: none;
+  }
+
+
+
+  .kpis{display:flex; flex-direction:column; gap:10px;}
+  .kpiGroup{padding-top:2px;}
+  .kpiGroupTitle{
+    font-size: 12px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.55);
+    margin: 0 0 6px 2px;
+  }
+  .kpiGroupRow{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+
+  
+
+  .kpiIconSimple{
+    margin-top: 10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    opacity: 0.85;
+  }
+  .kpiIconSimple svg{
+    filter: drop-shadow(0 12px 28px rgba(0,0,0,0.45));
+  }
+
+
+  .kpiIconSimple svg{
+    filter: drop-shadow(0 14px 34px rgba(0,0,0,0.50));
+  }
+
+
+  .kpiIconSimple{
+    margin-top: 0 !important;
+    flex: 1 1 auto;
+    min-height: 0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 12px 0;
+  }
+
+  .kpiIconSimple{
+    margin-top: 25px !important;
+  }
+
+/* --- KPI Icon sizing (RC2) --- */
+#metricIcon{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  margin-top:45px; /* keep your chosen position */
+  height: 230px; /* reserve space so layout doesn't jump */
+}
+#metricIcon svg{
+  width: 200px;
+  height: 200px;
+  max-width: 200px;
+  max-height: 200px;
+  display:block;
+}
+/* --- end KPI Icon sizing --- */
+
+</style>
+</head>
+<body>
+<div class="wrap">
+<!-- HEADER: Logo | Title | Button -->
+<div class="topbar">
+<div class="header-grid">
+<div class="header-left">
+<div aria-label="Franken-Apotheken Logo" class="logo" style="color: rgba(255,255,255,0.95);">
+<!-- SVG inline (monochrom) -->
+<svg data-name="Layer 2" id="Layer_2" viewbox="0 0 429.23 50" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<style>
+      .cls-1 {
+        fill: none;
+      }
+
+      .cls-2 {
+        fill: currentColor;
+      }
+    </style>
+</defs>
+<g data-name="Layer 1" id="Layer_1-2">
+<g>
+<g>
+<path class="cls-1" d="M196.19,1.5h-31.62c-4.25,0-7.69,3.44-7.69,7.69v25.43q6.63-13.74,6.68-13.8c2.82,5.68,5.63,11.34,8.45,17.03q8.13-16.83,8.26-17.03c2.82,5.63,5.63,11.24,8.45,16.88q8.04-16.88,8.08-16.95c2.36,4.65,4.72,9.31,7.07,13.97V9.19c0-4.25-3.44-7.69-7.69-7.69Z"></path>
+<path class="cls-2" d="M196.61,0c-10.82,0-21.64.02-32.46.02-4.84,0-8.77,3.93-8.77,8.77v28.94h0v3.5c0,4.84,3.93,8.77,8.77,8.77h32.46c4.84,0,8.77-3.93,8.77-8.77V8.77C205.38,3.93,201.45,0,196.61,0ZM196.81,20.75q-.05.07-8.08,16.95c-2.82-5.63-5.63-11.24-8.45-16.88q-.12.2-8.26,17.03c-2.82-5.68-5.63-11.34-8.45-17.03t-6.68,13.8V9.19c0-4.25,3.44-7.69,7.69-7.69h31.62c4.25,0,7.69,3.44,7.69,7.69v25.52c-2.36-4.65-4.71-9.32-7.07-13.97Z"></path>
+</g>
+<g>
+<path class="cls-2" d="M230.34,37.22v-2.95c-.67,1.19-1.61,2.08-2.83,2.64-1.22.57-2.77.85-4.66.85-3.55,0-6.52-1.21-8.9-3.64-2.38-2.42-3.57-5.44-3.57-9.03,0-1.69.3-3.29.9-4.81.6-1.51,1.45-2.85,2.56-4,1.19-1.27,2.52-2.2,3.98-2.81,1.46-.6,3.09-.91,4.92-.91s3.25.29,4.51.87c1.26.58,2.28,1.46,3.05,2.64v-2.9h5.46v24.03h-5.4ZM216.1,25.01c0,2.03.67,3.72,2.02,5.08,1.35,1.36,2.99,2.04,4.93,2.04,1.76,0,3.31-.68,4.65-2.05,1.34-1.37,2.01-2.97,2.01-4.81,0-1.95-.67-3.63-2.02-5.04-1.35-1.4-2.92-2.11-4.73-2.11-1.89,0-3.51.67-4.85,2-1.34,1.33-2.01,2.96-2.01,4.88Z"></path>
+<path class="cls-2" d="M245.56,35.3v9.7h-5.51V13.19h5.51v2.01c1.12-.89,2.29-1.55,3.52-1.98s2.54-.64,3.95-.64c1.52,0,2.94.24,4.28.71,1.34.47,2.54,1.18,3.6,2.11,1.44,1.25,2.55,2.73,3.33,4.44.78,1.7,1.17,3.52,1.17,5.44,0,1.79-.35,3.5-1.06,5.13s-1.71,3.04-3,4.22c-1.11,1.05-2.37,1.85-3.79,2.4s-2.92.83-4.49.83-2.9-.21-4.12-.62c-1.22-.42-2.35-1.06-3.4-1.93ZM245.78,25.1c0,2.05.66,3.77,1.99,5.14,1.32,1.38,2.96,2.06,4.92,2.06s3.56-.7,4.93-2.1c1.36-1.4,2.04-3.07,2.04-5.02s-.68-3.71-2.05-5.05c-1.37-1.34-3.09-2.01-5.18-2.01-1.83,0-3.4.67-4.7,2.02-1.3,1.35-1.94,3-1.94,4.95Z"></path>
+<path class="cls-2" d="M267.25,25.1c0-1.69.31-3.29.93-4.82.62-1.52,1.52-2.87,2.7-4.05,1.21-1.21,2.57-2.14,4.09-2.79s3.09-.97,4.72-.97c1.73,0,3.33.29,4.79.86,1.46.58,2.81,1.44,4.03,2.59,1.25,1.21,2.22,2.6,2.91,4.18.68,1.58,1.03,3.2,1.03,4.86,0,1.84-.3,3.51-.9,5.03s-1.49,2.88-2.69,4.11c-1.19,1.24-2.56,2.17-4.08,2.81-1.53.63-3.19.95-4.98.95s-3.45-.32-4.94-.96c-1.49-.64-2.84-1.6-4.06-2.88-1.17-1.25-2.05-2.63-2.64-4.14-.6-1.51-.9-3.1-.9-4.77ZM273.01,25.05c0,2.23.61,3.99,1.84,5.3,1.22,1.3,2.88,1.95,4.98,1.95s3.72-.67,4.95-2c1.23-1.33,1.85-3.13,1.85-5.39,0-2.02-.64-3.69-1.93-4.99-1.29-1.3-2.91-1.95-4.86-1.95s-3.65.66-4.92,1.98c-1.27,1.32-1.9,3.02-1.9,5.1Z"></path>
+<path class="cls-2" d="M296.68,37.22v-19.05h-3.67v-4.98h3.67v-7.78h5.59v7.78h3.69v4.98h-3.69v19.05h-5.59Z"></path>
+<path class="cls-2" d="M313.72,5.41v10.51c.82-1.09,1.75-1.9,2.81-2.43s2.26-.79,3.62-.79c3,0,5.3.92,6.9,2.76s2.4,4.5,2.4,7.96v13.79h-5.59v-10.6c0-3.29-.37-5.52-1.1-6.7-.74-1.17-2.02-1.76-3.86-1.76s-3.2.66-4.02,1.98c-.82,1.32-1.22,3.58-1.22,6.78v10.29h-5.4V5.41h5.46Z"></path>
+<path class="cls-2" d="M338.09,26.98c.19,1.73.88,3.1,2.06,4.1,1.19,1,2.72,1.5,4.6,1.5,1.25,0,2.38-.26,3.37-.79s1.79-1.26,2.37-2.21h6.03c-1.02,2.62-2.54,4.66-4.58,6.11-2.03,1.45-4.38,2.17-7.05,2.17-1.79,0-3.44-.32-4.95-.95-1.51-.63-2.86-1.57-4.05-2.81-1.14-1.18-2.02-2.54-2.64-4.1-.63-1.55-.94-3.14-.94-4.77s.29-3.25.86-4.73,1.42-2.81,2.55-3.99c1.22-1.3,2.61-2.29,4.15-2.99,1.54-.7,3.14-1.05,4.78-1.05,2.08,0,4.03.47,5.83,1.42,1.81.95,3.34,2.28,4.61,4,.77,1.03,1.34,2.19,1.72,3.47.37,1.28.56,2.75.56,4.41,0,.13,0,.33-.02.6-.02.27-.02.47-.02.6h-19.25ZM351.35,22.54c-.48-1.6-1.29-2.82-2.41-3.66-1.13-.84-2.55-1.26-4.27-1.26-1.48,0-2.82.45-4,1.35-1.18.9-1.97,2.09-2.38,3.56h13.06Z"></path>
+<path class="cls-2" d="M365.79,37.22h-5.4V5.41h5.4v18.92l7.8-11.14h6.31l-8.32,11.4,9.96,12.63h-7.01l-8.74-12.21v12.21Z"></path>
+<path class="cls-2" d="M385.71,26.98c.19,1.73.88,3.1,2.06,4.1,1.19,1,2.72,1.5,4.6,1.5,1.25,0,2.38-.26,3.37-.79s1.79-1.26,2.37-2.21h6.03c-1.02,2.62-2.54,4.66-4.58,6.11-2.03,1.45-4.38,2.17-7.05,2.17-1.79,0-3.44-.32-4.95-.95-1.51-.63-2.86-1.57-4.05-2.81-1.14-1.18-2.02-2.54-2.64-4.1-.63-1.55-.94-3.14-.94-4.77s.29-3.25.86-4.73,1.42-2.81,2.55-3.99c1.22-1.3,2.61-2.29,4.15-2.99,1.54-.7,3.14-1.05,4.78-1.05,2.08,0,4.03.47,5.83,1.42,1.81.95,3.34,2.28,4.61,4,.77,1.03,1.34,2.19,1.72,3.47.37,1.28.56,2.75.56,4.41,0,.13,0,.33-.02.6-.02.27-.02.47-.02.6h-19.25ZM398.97,22.54c-.48-1.6-1.29-2.82-2.41-3.66-1.13-.84-2.55-1.26-4.27-1.26-1.48,0-2.82.45-4,1.35-1.18.9-1.97,2.09-2.38,3.56h13.06Z"></path>
+<path class="cls-2" d="M413.5,13.19v2.73c.82-1.09,1.75-1.9,2.81-2.43s2.26-.79,3.62-.79c1.73,0,3.24.33,4.53.98,1.29.66,2.36,1.64,3.22,2.95.55.87.95,1.87,1.19,2.98s.36,2.74.36,4.88v12.71h-5.59v-10.64c0-3.22-.37-5.42-1.11-6.62-.74-1.19-2.02-1.79-3.85-1.79s-3.2.66-4.02,1.98c-.82,1.32-1.22,3.58-1.22,6.78v10.29h-5.4V13.19h5.46Z"></path>
+</g>
+<g>
+<path class="cls-2" d="M12.3,13.19v4.98h-4.02v19.05H2.86v-19.05H0v-4.98h2.69v-.66c0-2.53.7-4.42,2.1-5.67s3.52-1.87,6.36-1.87c.12,0,.3,0,.56.02.25.02.45.02.6.02v5.02h-.39c-1.27,0-2.17.21-2.72.62-.55.42-.82,1.1-.82,2.07v.44h3.93Z"></path>
+<path class="cls-2" d="M25.85,18.06c-2.17.17-3.68.74-4.54,1.7-.86.96-1.29,2.7-1.29,5.2v12.26h-5.59V13.19h5.24v2.77c.84-1.08,1.77-1.87,2.78-2.37,1-.5,2.14-.75,3.41-.75v5.22Z"></path>
+<path class="cls-2" d="M46.08,37.22v-2.95c-.67,1.19-1.61,2.08-2.83,2.64-1.22.57-2.77.85-4.66.85-3.55,0-6.52-1.21-8.9-3.64-2.38-2.42-3.57-5.44-3.57-9.03,0-1.69.3-3.29.9-4.81.6-1.51,1.45-2.85,2.56-4,1.19-1.27,2.52-2.2,3.98-2.81,1.46-.6,3.09-.91,4.92-.91s3.25.29,4.51.87c1.26.58,2.28,1.46,3.05,2.64v-2.9h5.46v24.03h-5.4ZM31.83,25.01c0,2.03.67,3.72,2.02,5.08,1.35,1.36,2.99,2.04,4.93,2.04,1.76,0,3.31-.68,4.65-2.05,1.34-1.37,2.01-2.97,2.01-4.81,0-1.95-.67-3.63-2.02-5.04-1.35-1.4-2.92-2.11-4.73-2.11-1.89,0-3.51.67-4.85,2-1.34,1.33-2.01,2.96-2.01,4.88Z"></path>
+<path class="cls-2" d="M61.43,13.19v2.73c.82-1.09,1.75-1.9,2.81-2.43s2.26-.79,3.62-.79c1.73,0,3.24.33,4.53.98,1.29.66,2.36,1.64,3.22,2.95.55.87.95,1.87,1.19,2.98s.36,2.74.36,4.88v12.71h-5.59v-10.64c0-3.22-.37-5.42-1.11-6.62-.74-1.19-2.02-1.79-3.85-1.79s-3.2.66-4.02,1.98c-.82,1.32-1.22,3.58-1.22,6.78v10.29h-5.4V13.19h5.46Z"></path>
+<path class="cls-2" d="M86.94,37.22h-5.4V5.41h5.4v18.92l7.8-11.14h6.31l-8.32,11.4,9.96,12.63h-7.01l-8.74-12.21v12.21Z"></path>
+<path class="cls-2" d="M106.86,26.98c.19,1.73.88,3.1,2.06,4.1,1.19,1,2.72,1.5,4.6,1.5,1.25,0,2.38-.26,3.37-.79s1.79-1.26,2.37-2.21h6.03c-1.02,2.62-2.54,4.66-4.58,6.11-2.03,1.45-4.38,2.17-7.05,2.17-1.79,0-3.44-.32-4.95-.95-1.51-.63-2.86-1.57-4.05-2.81-1.14-1.18-2.02-2.54-2.64-4.1-.63-1.55-.94-3.14-.94-4.77s.29-3.25.86-4.73,1.42-2.81,2.55-3.99c1.22-1.3,2.61-2.29,4.15-2.99,1.54-.7,3.14-1.05,4.78-1.05,2.08,0,4.03.47,5.83,1.42,1.81.95,3.34,2.28,4.61,4,.77,1.03,1.34,2.19,1.72,3.47.37,1.28.56,2.75.56,4.41,0,.13,0,.33-.02.6-.02.27-.02.47-.02.6h-19.25ZM120.12,22.54c-.48-1.6-1.29-2.82-2.41-3.66-1.13-.84-2.55-1.26-4.27-1.26-1.48,0-2.82.45-4,1.35-1.18.9-1.97,2.09-2.38,3.56h13.06Z"></path>
+<path class="cls-2" d="M134.66,13.19v2.73c.82-1.09,1.75-1.9,2.81-2.43s2.26-.79,3.62-.79c1.73,0,3.24.33,4.53.98,1.29.66,2.36,1.64,3.22,2.95.55.87.95,1.87,1.19,2.98s.36,2.74.36,4.88v12.71h-5.59v-10.64c0-3.22-.37-5.42-1.11-6.62-.74-1.19-2.02-1.79-3.85-1.79s-3.2.66-4.02,1.98c-.82,1.32-1.22,3.58-1.22,6.78v10.29h-5.4V13.19h5.46Z"></path>
+</g>
+</g>
+</g>
+</svg>
+</div>
+</div>
+<div class="header-center">
+<h1 class="header-title">Controlling Dashboard</h1>
+</div>
+<div class="header-right">
+<button class="btn" id="reloadBtn">Jetzt aktualisieren</button>
+</div>
+</div>
+</div>
+<!-- Tabs: Navigation für Kennzahlen -->
+<div aria-label="Kategorien" class="tabs tabs-global" role="tablist">
+<div aria-selected="true" class="tab active" data-panel="pack" role="tab" tabindex="0">Packungen</div>
+<div aria-selected="false" class="tab" data-panel="customers" role="tab" tabindex="0">Kunden</div>
+<div aria-selected="false" class="tab" data-panel="sales" role="tab" tabindex="0">Umsatz</div>
+</div>
+<div class="grid">
+<div class="card">
+<h2>Filter</h2>
+<div class="controls">
+<div>
+<label>Apotheke</label>
+<select id="pharmacy" multiple="" size="5">
+<option selected="" value="ALL">Summe (alle Apotheken)</option>
+<option value="NEA">NEA</option>
+<option value="DAC">DAC</option>
+<option value="EMS">EMS</option>
+<option value="WIL">WIL</option>
+</select>
+</div>
+<div>
+<label>Jahre (mehrfach möglich)</label>
+<select id="years" multiple=""></select>
+<div class="small">Tipp: Strg/⌘ gedrückt halten für Mehrfachauswahl.</div>
+</div>
+<div>
+<label>Auflösung</label>
+<div class="toggles">
+<div class="toggle" data-gran="year" id="granYear">Jahr</div>
+<div class="toggle" data-gran="month" id="granMonth">Monat</div>
+<div class="toggle active" data-gran="week" id="granWeek">Woche</div>
+<div class="toggle" data-gran="day" id="granDay">Tag</div>
+</div>
+</div>
+</div><div class="kpiIconSimple" id="metricIcon"></div>
+</div>
+<div class="card chartwrap">
+<div class="main-panel active" id="panel-pack" role="tabpanel">
+<h2 id="chartTitle">Packungen • Jahresvergleich</h2>
+<div class="chart-topline">
+<div aria-label="Darstellungsmodus" class="chart-mode">
+<button class="btn btn-small active" id="btnModeSum" type="button">Summe</button>
+<button class="btn btn-small" id="btnModeCompare" type="button">Apothekenvergleich</button>
+</div>
+<div aria-label="Ansicht" class="chart-switch">
+<button class="btn btn-small active" id="btnChartOverlay" type="button">Jahresvergleich</button>
+<button class="btn btn-small" id="btnChartContinuous" type="button">Fortlaufend</button>
+</div>
+</div>
+<div id="chart"></div>
+<div id="chart2" style="display:none;"></div>
+<div class="chart-desc" id="chartDesc" style="display:none;">
+<div class="chart-desc-line" id="chartDescLine1"></div>
+<div class="chart-desc-line2" id="chartDescLine2"></div>
+</div>
+</div>
+<div class="main-panel" id="panel-customers" role="tabpanel">
+<h2>Kunden • in Arbeit</h2>
+<p class="panel-note">Hier entwickeln wir die Kunden-Seite (Charts, KPIs, Vergleiche). Die Filter links gelten weiter.</p>
+</div>
+<div class="main-panel" id="panel-sales" role="tabpanel">
+<h2>Umsatz • in Arbeit</h2>
+<p class="panel-note">Hier entwickeln wir die Umsatz-Seite (z. B. Tagesumsatz, Kassenrezepte, Gesamt, Kredit) inkl. Jahresvergleich.</p>
+</div>
+</div>
+<div class="card kpiBar--accent">
+<h2>Kennzahlen</h2><div class="kpiBar-inner"><div>
+<label>Berechnungsgrundlage (Ø-Werte)</label>
+<div class="toggles">
+<div class="toggle active" data-avg="weighted" id="avgWeighted">Ø pro Volltag (gewichtet)</div>
+<div class="toggle" data-avg="calendar" id="avgCalendar">Ø pro Kalendertag</div>
+</div>
+<div class="small">Gewichtet: Samstag &amp; definierte Halbtage zählen als <span class="mono">0.5</span>. Nullerzeilen werden ignoriert.</div>
+</div><div class="kpis"><div class="kpiGroup"><div class="kpiGroupTitle">Packungen</div><div class="kpiGroupRow"><div class="kpi"><div class="k">Packungen gesamt</div><div class="v" id="kpiPackSum">–</div><div class="d"></div></div><div class="kpi"><div class="k">Ø Packungen / Tag</div><div class="v" id="kpiPackAvg">–</div><div class="d"></div></div></div></div><div class="kpiGroup"><div class="kpiGroupTitle">Kunden</div><div class="kpiGroupRow"><div class="kpi"><div class="k">Kunden gesamt</div><div class="v" id="kpiCustSum">–</div><div class="d"></div></div><div class="kpi"><div class="k">Ø Kunden / Tag</div><div class="v" id="kpiCustAvg">–</div><div class="d"></div></div></div></div><div class="kpiGroup"><div class="kpiGroupTitle">Umsatz</div><div class="kpiGroupRow"><div class="kpi"><div class="k">Bruttoumsatz gesamt</div><div class="v" id="kpiRevSum">–</div><div class="d"></div></div><div class="kpi"><div class="k">Bruttoumsatz / Tag</div><div class="v" id="kpiRevAvg">–</div><div class="d"></div></div></div></div></div></div></div><div class="card charts"><h2>Wochentagsprofil</h2><div class="chartwrap"><div id="weekdayChart" style="height:320px;"></div>
+<div class="chart-desc" id="weekdayDesc">
+<div class="chart-desc-line"></div>
+<div class="chart-desc-line2"></div>
+</div>
+</div></div></div>
+<!-- Global Footer -->
+<div class="topbar footerbar">
+<div class="footer footer-global" style="margin:0; border:0; box-shadow:none; background:transparent; padding:0; justify-content:center;">
+<span class="pill">Stand: <strong id="stand">–</strong></span>
+<span class="pill">Quelle: <strong class="mono">CSV-Exporte (Dropbox)</strong></span>
+<span class="pill"><span class="mono" id="loaded">Lade Daten…</span></span>
+</div>
+</div>
+</div>
+<script>
+  
+// Fixed pharmacy color mapping (NEA blau, DAC rot, EMS türkis, WIL orange)
+const pharmacyColors = {
+  "NEA": "#2f6fff",
+  "DAC": "#ff4d4d",
+  "EMS": "#2dd4bf",
+  "WIL": "#ff9f1c"
+};
+
+const state = {
+  reqSeq: 0,
+    mode: "sum",
+    metric: "pack",
+    records: [],
+    stand: null,
+    loaded_files: [],
+    granularity: "week",   // week | day
+    avgMode: "weighted",
+    chartMode: "overlay",   // overlay | continuous
+   // weighted | calendar
+    pharmacy: "ALL",
+    years: [],
+    fromMD: "01-01",
+    toMD: "12-31",
+  };
+
+  const el = (id) => document.getElementById(id);
+  const fmtInt = (n) => (n ?? 0).toLocaleString("de-DE");
+  const fmt1 = (n) => (n ?? 0).toLocaleString("de-DE", {maximumFractionDigits: 1, minimumFractionDigits: 1});
+  const fmtEur0 = (n) => (n ?? 0).toLocaleString("de-DE", {style:"currency", currency:"EUR", maximumFractionDigits: 0});
+  const fmtEur2 = (n) => (n ?? 0).toLocaleString("de-DE", {style:"currency", currency:"EUR", maximumFractionDigits: 2, minimumFractionDigits: 2});
+  const fmtNumDE = (v) => (v === null || v === undefined) ? "–" : Number(v).toLocaleString("de-DE");
+
+  // Active metric (pack | cust | rev)
+  function metricField(){
+    return (state.metric === 'cust') ? 'kunden' : (state.metric === 'rev') ? 'gesamtumsatz' : 'packungen';
+  }
+  function metricLabel(){
+    return (state.metric === 'cust') ? 'Kunden' : (state.metric === 'rev') ? 'Umsatz' : 'Packungen';
+  }
+  function metricSeriesName(){
+    return metricLabel();
+  }
+  function metricHead(isCompare){
+    if(state.metric === 'rev') return isCompare ? 'Vergleich des Umsatzes' : 'Summe des Umsatzes';
+    // Packungen/Kunden
+    return isCompare ? `Vergleich der ${metricLabel()}` : `Summe der ${metricLabel()}`;
+  }
+  function metricAvgBasisText(){
+    if(state.metric === 'rev') return (state.avgMode === 'calendar') ? 'Ø Umsatz pro Kalendertag' : 'Ø Umsatz (gewichtet; Samstag fiktiv)';
+    const noun = metricLabel();
+    return (state.avgMode === 'calendar') ? `Ø ${noun} pro Kalendertag` : `Ø ${noun} (gewichtet; Samstag fiktiv)`;
+  }
+
+  function metricValue(r){
+    const f = metricField();
+    const v = r ? r[f] : 0;
+    return (typeof v === 'number') ? v : (v ? Number(v) : 0);
+  }
+  function fmtMetricAxis(v){
+    if(state.metric === 'rev') return (v ?? 0).toLocaleString('de-DE', {style:'currency', currency:'EUR', maximumFractionDigits:0});
+    return fmtNumDE(v);
+  }
+  function fmtMetricTooltip(v){
+    if(state.metric === 'rev') return (v ?? 0).toLocaleString('de-DE', {style:'currency', currency:'EUR', maximumFractionDigits:2});
+    return fmtNumDE(v);
+  }
+
+  // Metric icon (big SVG under the granularity toggles)
+  const METRIC_ICONS = {
+    pack: `<svg class="kpiIconSvg" fill="none" height="200" viewBox="0 0 640 640" width="200" xmlns="http://www.w3.org/2000/svg">
+      <path d="M128 176C128 149.5 149.5 128 176 128C202.5 128 224 149.5 224 176L224 288L128 288L128 176zM240 432C240 383.3 258.1 338.8 288 305L288 176C288 114.1 237.9 64 176 64C114.1 64 64 114.1 64 176L64 464C64 525.9 114.1 576 176 576C213.3 576 246.3 557.8 266.7 529.7C249.7 501.1 240 467.7 240 432zM304.7 499.4C309.3 508.1 321 509.1 328 502.1L502.1 328C509.1 321 508.1 309.3 499.4 304.7C479.3 294 456.4 288 432 288C352.5 288 288 352.5 288 432C288 456.3 294 479.3 304.7 499.4zM361.9 536C354.9 543 355.9 554.7 364.6 559.3C384.7 570 407.6 576 432 576C511.5 576 576 511.5 576 432C576 407.7 570 384.7 559.3 364.6C554.7 355.9 543 354.9 536 361.9L361.9 536z" fill="rgba(255,255,255,0.8)" opacity="1" />
+    </svg>`,
+    cust: `<svg class="kpiIconSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
+      <path d="M320 64C355.3 64 384 92.7 384 128C384 163.3 355.3 192 320 192C284.7 192 256 163.3 256 128C256 92.7 284.7 64 320 64zM416 376C416 401 403.3 423 384 435.9L384 528C384 554.5 362.5 576 336 576L304 576C277.5 576 256 554.5 256 528L256 435.9C236.7 423 224 401 224 376L224 336C224 283 267 240 320 240C373 240 416 283 416 336L416 376zM160 96C190.9 96 216 121.1 216 152C216 182.9 190.9 208 160 208C129.1 208 104 182.9 104 152C104 121.1 129.1 96 160 96zM176 336L176 368C176 400.5 188.1 430.1 208 452.7L208 528C208 529.2 208 530.5 208.1 531.7C199.6 539.3 188.4 544 176 544L144 544C117.5 544 96 522.5 96 496L96 439.4C76.9 428.4 64 407.7 64 384L64 352C64 299 107 256 160 256C172.7 256 184.8 258.5 195.9 262.9C183.3 284.3 176 309.3 176 336zM432 528L432 452.7C451.9 430.2 464 400.5 464 368L464 336C464 309.3 456.7 284.4 444.1 262.9C455.2 258.4 467.3 256 480 256C533 256 576 299 576 352L576 384C576 407.7 563.1 428.4 544 439.4L544 496C544 522.5 522.5 544 496 544L464 544C451.7 544 440.4 539.4 431.9 531.7C431.9 530.5 432 529.2 432 528zM480 96C510.9 96 536 121.1 536 152C536 182.9 510.9 208 480 208C449.1 208 424 182.9 424 152C424 121.1 449.1 96 480 96z" fill="rgba(255,255,255,0.8)" />
+    </svg>`,
+    rev: `<svg class="kpiIconSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
+      <path d="M192 160L192 144C192 99.8 278 64 384 64C490 64 576 99.8 576 144L576 160C576 190.6 534.7 217.2 474 230.7C471.6 227.9 469.1 225.2 466.6 222.7C451.1 207.4 431.1 195.8 410.2 187.2C368.3 169.7 313.7 160.1 256 160.1C234.1 160.1 212.7 161.5 192.2 164.2C192 162.9 192 161.5 192 160.1zM496 417L496 370.8C511.1 366.9 525.3 362.3 538.2 356.9C551.4 351.4 564.3 344.7 576 336.6L576 352C576 378.8 544.5 402.5 496 417zM496 321L496 288C496 283.5 495.6 279.2 495 275C510.5 271.1 525 266.4 538.2 260.8C551.4 255.2 564.3 248.6 576 240.5L576 255.9C576 282.7 544.5 306.4 496 320.9zM64 304L64 288C64 243.8 150 208 256 208C362 208 448 243.8 448 288L448 304C448 348.2 362 384 256 384C150 384 64 348.2 64 304zM448 400C448 444.2 362 480 256 480C150 480 64 444.2 64 400L64 384.6C75.6 392.7 88.5 399.3 101.8 404.9C143.7 422.4 198.3 432 256 432C313.7 432 368.3 422.3 410.2 404.9C423.4 399.4 436.3 392.7 448 384.6L448 400zM448 480.6L448 496C448 540.2 362 576 256 576C150 576 64 540.2 64 496L64 480.6C75.6 488.7 88.5 495.3 101.8 500.9C143.7 518.4 198.3 528 256 528C313.7 528 368.3 518.3 410.2 500.9C423.4 495.4 436.3 488.7 448 480.6z" fill="rgba(255,255,255,0.8)" />
+    </svg>`
+  };
+
+  function renderMetricIcon(){
+    const host = document.getElementById('metricIcon');
+    if(!host) return;
+    const svg = METRIC_ICONS[state.metric] || METRIC_ICONS.pack;
+    host.innerHTML = svg;
+  }
+  function updateChartTitle(){
+    const title = document.getElementById('chartTitle');
+    if(!title) return;
+    const base = metricLabel();
+    title.textContent = (state.chartMode === 'continuous') ? `${base} • Fortlaufend` : `${base} • Jahresvergleich`;
+  }
+
+  // Fixed pharmacy colors (for Apothekenvergleich)
+  const PHARM_COLORS = {
+    "NEA": "#3B82F6", // Blau
+    "DAC": "#EF4444", // Rot
+    "EMS": "#14B8A6", // Türkis
+    "WIL": "#F59E0B"  // Orange
+  };
+
+  function getSelectedPharmaciesUI(){
+    const sel = el("pharmacy");
+    if(!sel) return ["ALL"];
+    let vals = Array.from(sel.selectedOptions).map(o => o.value);
+    if(vals.length === 0) return ["ALL"];
+    // If ALL is selected together with specific pharmacies, ignore ALL
+    if(vals.includes("ALL") && vals.length > 1){
+      vals = vals.filter(v => v !== "ALL");
+    }
+    if(vals.length === 0) return ["ALL"];
+    return vals;
+  }
+
+  function getComparePharmacies(records){
+    const vals = getSelectedPharmaciesUI();
+    if(vals.length === 1 && vals[0] === "ALL"){
+      // Compare all pharmacies present (preferred order)
+      const present = new Set(records.map(r => r.apotheke));
+      const ordered = ["NEA","DAC","EMS","WIL"].filter(a => present.has(a));
+      return ordered.length ? ordered : Array.from(present).sort();
+    }
+    return vals;
+  }
+
+  function pickCompareYear(records){
+    if(state.years && state.years.length){
+      const ys = state.years.map(y => parseInt(y,10)).filter(n => !isNaN(n));
+      if(ys.length) return Math.max(...ys);
+    }
+    const ys = records.map(r => r.year).filter(Boolean);
+    return ys.length ? Math.max(...ys) : new Date().getFullYear();
+  }
+
+  
+function updateCompareHint(){
+  const hint = document.getElementById("compareHint");
+  const yearEl = document.getElementById("compareHintYear");
+  if(!hint || !yearEl) return;
+
+  // Show only in compare + overlay + multiple years selected
+  if(state.mode === "compare" && state.chartMode === "overlay" && Array.isArray(state.years) && state.years.length > 1){
+    const years = state.years.map(y => parseInt(y,10)).filter(n => !isNaN(n));
+    const latest = years.length ? Math.max(...years) : "";
+    if(yearEl) yearEl.textContent = latest;
+    hint.style.display = "block";
+    return;
+  }
+  hint.style.display = "none";
+}
+
+
+function formatYearsDE(years){
+  const ys = (years || []).map(y => parseInt(y,10)).filter(n => !isNaN(n)).sort((a,b)=>a-b);
+  if(!ys.length) return "";
+  if(ys.length === 1) return `das Jahr ${ys[0]}`;
+
+  const minY = ys[0], maxY = ys[ys.length-1];
+  let contiguous = true;
+  for(let i=1;i<ys.length;i++){
+    if(ys[i] !== ys[i-1] + 1){ contiguous = false; break; }
+  }
+  if(contiguous) return `die Jahre ${minY} bis ${maxY}`;
+
+  const parts = ys.map(String);
+  if(parts.length === 2) return `die Jahre ${parts[0]} und ${parts[1]}`;
+  return `die Jahre ${parts.slice(0,-1).join(", ")} und ${parts[parts.length-1]}`;
+}
+
+function orderedPharmacies(vals){
+  const order = ["NEA","DAC","EMS","WIL"];
+  const set = new Set(vals || []);
+  const out = order.filter(x => set.has(x));
+  const unknown = (vals || []).filter(x => !order.includes(x));
+  return out.concat(unknown);
+}
+
+function formatPharmaciesDE(selectedVals){
+  if(!selectedVals || !selectedVals.length || (selectedVals.length===1 && selectedVals[0]==="ALL")){
+    return "aller Apotheken";
+  }
+  const ordered = orderedPharmacies(selectedVals);
+  if(ordered.length === 1) return `der Apotheke ${ordered[0]}`;
+  if(ordered.length === 2) return `der Apotheken ${ordered[0]} und ${ordered[1]}`;
+  return `der Apotheken ${ordered.slice(0,-1).join(", ")} und ${ordered[ordered.length-1]}`;
+}
+
+function formatGranularityDE(gran){
+  switch(gran){
+    case "day": return "im Tagesverlauf";
+    case "week": return "im Wochenverlauf";
+    case "month": return "im Monatsverlauf";
+    case "year": return "im Jahresverlauf";
+    default: return "";
+  }
+}
+
+function formatDarstellungDE(mode){
+  return (mode === "overlay") ? "Jahresvergleich" : "Fortlaufend";
+}
+
+
+function updateCompareDebug(recs){ /* debug removed */ }
+function buildCompareYearBars(recs, phs){
+  // guard: never render bars while in continuous mode
+  if(state.chartMode === "continuous"){ return; }
+// guard: never render bars while in continuous mode
+  if(state.chartMode === "continuous"){ return; }
+  window.__lastChartBuilder = "buildCompareYearBars_XaxisPharmacy";
+// guard: never render bars while in continuous mode
+  if(state.chartMode === "continuous"){ return; }
+  // X-Achse = Apotheke, Serie = Jahr (damit bei nur 1 Jahr nichts überlagert)
+  const years = (state.years || []).map(String).sort();
+  const yearSet = new Set(years);
+  const sums = {}; // year -> Map(pharmacy -> sum)
+  for(const y of years) sums[y] = new Map();
+
+  for(const r of recs){
+    const y = String(r.year);
+    if(!yearSet.has(y)) continue;
+    if(!phs.includes(r.apotheke)) continue;
+    const v = Number(r.packungen) || 0;
+    const mp = sums[y];
+    mp.set(r.apotheke, (mp.get(r.apotheke) || 0) + v);
+  }
+
+  const xCats = phs.slice(); // preserve order NEA/DAC/EMS/WIL etc.
+
+  const series = years.map(y => ({
+    name: y,
+    type: "bar",
+    data: xCats.map(p => sums[y].get(p) ?? 0),
+    barMaxWidth: 34
+  }));
+
+  const opt = {
+    animation:false,
+    title:{ text:"Apothekenvergleich • Jahr (X=Apotheke)", left:0, top:0,
+      textStyle:{color:"rgba(255,255,255,0.75)", fontSize:12, fontWeight:600}},
+    legend:{ top:18, textStyle:{color:"rgba(255,255,255,0.80)"} },
+    tooltip:{ trigger:"axis", axisPointer:{type:"shadow"},
+      backgroundColor:"rgba(20,20,24,0.92)", borderColor:"rgba(255,255,255,0.12)", textStyle:{color:"rgba(255,255,255,0.92)"},
+      formatter:(params)=>{
+        const p = params?.[0]?.axisValue ?? "";
+        const lines=[`<b>${p}</b>`];
+        for(const it of params){
+          lines.push(`${it.marker} ${it.seriesName}: ${fmtNumDE(it.data)}`);
+        }
+        return lines.join("<br/>");
+      }
+    },
+    grid:{ left:78, right:24, top:60, bottom:78, containLabel:true },
+    xAxis:{ type:"category", data: xCats, name:"Apotheke", nameLocation:"middle", nameGap:52,
+      nameTextStyle:{color:AXIS_TITLE_COLOR_COMPARE, fontWeight:600},
+      axisLabel:{color:"rgba(255,255,255,0.68)"},
+      axisLine:{lineStyle:{color:"rgba(255,255,255,0.18)"}},
+      axisTick:{show:false}
+    },
+    yAxis:{ type:"value", name:metricLabel(), nameLocation:"end",
+      nameTextStyle:{ color: "rgba(255,255,255,0.68)", padding:[0,0,8,0] },
+      axisLabel:{ color: "rgba(255,255,255,0.68)", formatter:(v)=>fmtNumDE(v) },
+      splitLine:{ lineStyle:{ color:"rgba(255,255,255,0.08)" } },
+      axisLine:{ show:false }
+    },
+    series
+  };
+  window.__lastChartTarget="chart";
+    try{ if(state && state.mode==='compare'){ applyCompareAxisTitleStyle(opt); } }catch(e){}
+    try{ applyCompareOverlayXAxisTitleFix(opt); }catch(e){}
+  window.__ech?.setOption(opt, true);
+  try{ if(typeof updateCompareDebug==="function") updateCompareDebug(window.__lastDebugRecs || recs); }catch(e){}
+}
+
+function buildCompareYearLines(recs, phs){
+  window.__lastChartBuilder = "buildCompareYearLines";
+  window.__lastChartBuilder = "buildCompareYearLines";
+  // Fortlaufend im Apothekenvergleich + Jahr: X=Jahr, Serie=Apotheke
+  const years = (state.years || []).map(String).sort();
+  const yearSet = new Set(years);
+  const sums = {};
+  for(const p of phs) sums[p] = new Map();
+
+  for(const r of recs){
+    const y = String(r.year);
+    if(!yearSet.has(y)) continue;
+    if(!sums[r.apotheke]) continue;
+    const v = Number(r.packungen) || 0;
+    const mp = sums[r.apotheke];
+    mp.set(y, (mp.get(y) || 0) + v);
+  }
+
+  const xs = years;
+
+  const series = phs.map(p => ({
+    name: p,
+    type: "line",
+    showSymbol: true,
+    symbolSize: xs.length === 1 ? 10 : 7,
+    data: xs.map(y => sums[p].get(y) ?? null),
+    connectNulls: true,
+    lineStyle: { width: 2, color: pharmacyColors[p] || undefined },
+    itemStyle: { color: pharmacyColors[p] || undefined },
+    emphasis: { focus: "series" }
+  }));
+
+  const opt = {
+    animation:false,
+    legend:{ top:0, textStyle:{color:"rgba(255,255,255,0.80)"} },
+    tooltip:{ trigger:"axis",
+      backgroundColor:"rgba(20,20,24,0.92)",
+      borderColor:"rgba(255,255,255,0.12)",
+      textStyle:{color:"rgba(255,255,255,0.92)"},
+      formatter:(params)=>{
+        const year = params?.[0]?.axisValue ?? "";
+        const lines=[`<b>Jahr ${year}</b>`];
+        for(const it of params){
+          if(it.data == null) continue;
+          lines.push(`${it.marker} ${it.seriesName}: ${fmtNumDE(it.data)}`);
+        }
+        return lines.join("<br/>");
+      }
+    },
+    grid:{ left:78, right:24, top:44, bottom:78, containLabel:true },
+    xAxis:{ type:"category", data: xs, name:"Jahr", nameLocation:"middle", nameGap:52,
+      nameTextStyle:{color:AXIS_TITLE_COLOR_COMPARE, fontWeight:600},
+      axisLabel:{color:"rgba(255,255,255,0.68)"},
+      axisLine:{lineStyle:{color:"rgba(255,255,255,0.18)"}},
+      axisTick:{show:false}
+    },
+    yAxis:{ type:"value", name:metricLabel(), nameLocation:"end",
+      nameTextStyle:{ color: "rgba(255,255,255,0.68)", padding:[0,0,8,0] },
+      axisLabel:{ color: "rgba(255,255,255,0.68)", formatter:(v)=>fmtNumDE(v) },
+      splitLine:{ lineStyle:{ color:"rgba(255,255,255,0.08)" } },
+      axisLine:{ show:false }
+    },
+    series
+  };
+
+  const c2 = document.getElementById("chart2");
+  const ech2 = window.__ech2 || (window.__ech2 = echarts.init(c2));
+  window.__lastChartTarget="chart2";
+    try{ if(state && state.mode==='compare'){ applyCompareAxisTitleStyle(opt); } }catch(e){}
+    try{ applyCompareOverlayXAxisTitleFix(opt); }catch(e){}
+  ech2.setOption(opt, true);
+
+  // keep overlay chart cleared in this mode
+  if(window.__ech){ window.__ech.clear(); }try{ if(typeof updateCompareDebug==="function") updateCompareDebug(window.__lastDebugRecs || recs); }catch(e){}
+}
+
+
+
+
+
+function buildChartDescription(){
+  const desc = document.getElementById("chartDesc");
+  const l1 = document.getElementById("chartDescLine1");
+  const l2 = document.getElementById("chartDescLine2");
+  if(!desc || !l1 || !l2) return;
+
+  const pharmVals = getSelectedPharmaciesUI(); // ["ALL"] or list (ALL removed if combined)
+  const phText = formatPharmaciesDE(pharmVals);
+  const yearsText = formatYearsDE(state.years);
+  const granText = formatGranularityDE(state.granularity);
+  const darstellung = formatDarstellungDE(state.chartMode);
+
+  const isCompare = (state.mode === "compare");
+  const head = metricHead(isCompare);
+  const yearsPart = yearsText ? ` für ${yearsText}` : "";
+  if(l1) l1.textContent = `${head} ${phText} ${granText}${yearsPart} (${darstellung}).`;
+
+  let hint = "";
+
+  const selectedNonAll = (pharmVals.length===1 && pharmVals[0]==="ALL") ? [] : pharmVals;
+
+  if(isCompare && selectedNonAll.length === 1){
+    hint = "Die Auswahl enthält nur eine Apotheke; daher wird eine Summendarstellung angezeigt.";
+  }
+
+  if(isCompare && !(state.granularity === "day" || state.granularity === "week" || state.granularity === "month" || state.granularity === "year")){
+    hint = "Hinweis: Apothekenvergleich ist für diese Auflösung noch nicht verfügbar.";
+  }
+
+  if(isCompare && state.chartMode === "overlay" && (state.granularity === "day" || state.granularity === "week" || state.granularity === "month")){
+    const ys = (state.years || []).map(y => parseInt(y,10)).filter(n => !isNaN(n));
+    if(ys.length > 1){
+      const latest = Math.max(...ys);
+      const ignored = ys.filter(y => y !== latest).sort((a,b)=>a-b);
+      if(ignored.length){
+        const ignoredText = ignored.length===1 ? `des Jahres ${ignored[0]}` : `der Jahre ${ignored.join(", ")}`;
+        hint = `Angezeigt wird nur das Jahr ${latest}; die zusätzliche Auswahl ${ignoredText} wird ignoriert, da diese Darstellung nur für ein Jahr definiert ist.`;
+      } else {
+        hint = `Angezeigt wird nur das Jahr ${latest}; weitere Jahre werden ignoriert, da diese Darstellung nur für ein Jahr definiert ist.`;
+      }
+    }
+  }
+
+
+    // Trend-Kommentar NUR bei Granularität = Jahr (Summe)
+  const yearTrend = __computeYearTrendComment();
+  const singleYearTrend = __computeSingleYearTrendComment();
+  // Hinweis zur Trendlinie (ohne Prozent/Delta, damit es nicht je Granularität widerspricht)
+  if(state.chartMode==="continuous"){
+    if(yearTrend){
+      hint = hint ? (hint + " " + yearTrend) : yearTrend;
+    }else if(singleYearTrend){
+      hint = hint ? (hint + " " + singleYearTrend) : singleYearTrend;
+    }
+  }
+if(hint){
+    if(l2) l2.textContent = hint;
+    l2.style.display = "block";
+  }else{
+    if(l2) l2.textContent = "";
+    l2.style.display = "none";
+  }
+
+  desc.style.display = "block";
+}
+
+function setPackungenTitleSuffix(){
+    // Backward-compatible name: update chart title based on active metric
+    const title = document.getElementById('chartTitle');
+    if(!title) return;
+    const base = (state.chartMode === 'overlay') ? `${metricLabel()} • Jahresvergleich` : `${metricLabel()} • Fortlaufend`;
+    title.textContent = (state.mode === 'compare') ? (base + ' • Apothekenvergleich') : base;
+  }
+
+  const MONTHS_DE = ["Jan","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez"];
+  const pad2 = (n)=> String(n).padStart(2,"0");
+
+  function formatMonthShort(mm){
+    const m = Math.max(1, Math.min(12, Number(mm)));
+    return MONTHS_DE[m-1];
+  }
+
+  function formatMonthKey(key){
+    // YYYY-MM -> "Mon\nYYYY"
+    const s = String(key||"");
+    const m = /^(\d{4})-(\d{2})$/.exec(s);
+    if(!m) return s;
+    return `${formatMonthShort(parseInt(m[2],10))}\n${m[1]}`;
+  }
+
+  function formatDateShort(iso){
+    // YYYY-MM-DD -> DD.MM.YY
+    const s = String(iso||"");
+    if(/^\d{4}-\d{2}-\d{2}$/.test(s)){
+      return `${s.slice(8,10)}.${s.slice(5,7)}.${s.slice(2,4)}`;
+    }
+    return s;
+  }
+
+  function formatXContinuous(val){
+    if(!val) return "";
+    const s = String(val);
+    if(state.granularity === "week"){
+      const parts = s.split("-KW");
+      if(parts.length === 2){
+        // two-line label: KWxx (line 1) and YYYY (line 2)
+        return `KW${parts[1]}\n${parts[0]}`;
+      }
+      return s;
+    }
+
+    if(state.granularity === "month"){
+      return formatMonthKey(s);
+    }
+
+    // day: YYYY-MM-DD -> DD.MM.YY
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)){
+      return `${s.slice(8,10)}.${s.slice(5,7)}.${s.slice(2,4)}`;
+    }
+    return s;
+  }
+
+  const labelStep = (n, maxLabels=15) => Math.max(1, Math.ceil((n || 1) / maxLabels));
+
+  function mdFromDateInput(value){
+    const parts = value.split("-");
+    return `${parts[1]}-${parts[2]}`; // MM-DD
+  }
+
+  function withinMonthDay(d, fromMD, toMD){
+    const md = d.slice(5);
+    if(fromMD <= toMD){
+      return (md >= fromMD && md <= toMD);
+    }
+    return (md >= fromMD || md <= toMD);
+  }
+
+  function filteredRecords(){
+    const yearsSet = new Set(state.years.map(y => parseInt(y, 10)));
+    return state.records.filter(r => {
+      const sel = el("pharmacy");
+      const vals = Array.from(sel.selectedOptions).map(o => o.value);
+      if (!vals.includes("ALL") && !vals.includes(r.apotheke)) return false;
+      if(!yearsSet.has(r.year)) return false;
+      if(!withinMonthDay(r.date, state.fromMD, state.toMD)) return false;
+      return true;
+    });
+  }
+
+  function aggregateSeries(records){
+    const out = {};
+    for(const r of records){
+      const y = r.year;
+      if(!out[y]) out[y] = new Map();
+      const x = (state.granularity === "month") ? r.month : (state.granularity === "week") ? r.iso_week : r.day_of_year;
+
+      if(!out[y].has(x)){
+        out[y].set(x, {sumPack:0, sumCust:0, sumRev:0, sumVal:0, sumWeight:0, countDays:0});
+      }
+      const cell = out[y].get(x);
+      cell.sumPack += (r.packungen || 0);
+      cell.sumCust += (r.kunden || 0);
+      cell.sumRev  += (r.gesamtumsatz || 0);
+      cell.sumVal  += metricValue(r);
+      cell.sumWeight += (r.weight || 1);
+      cell.countDays += 1;
+    }
+    return out;
+  }
+
+  function computeKpis(records){
+    let packSum = 0, custSum = 0, revSum = 0;
+
+    // Für Ø / Tag zählt der Zeitraum (Kalendertage bzw. Volltage-Weights) NICHT pro Apotheke,
+    // sondern pro Datum genau einmal – sonst würde "Summe (alle Apotheken)" künstlich geteilt.
+    const seenDates = new Set();
+    let weightSum = 0;
+
+    for(const r of records){
+      packSum += (r.packungen || 0);
+      custSum += (r.kunden || 0);
+      revSum += (r.gesamtumsatz || 0);
+
+      if(r.date){
+        if(!seenDates.has(r.date)){
+          seenDates.add(r.date);
+          weightSum += (r.weight || 1);
+        }
+      }else{
+        // Fallback: ohne Datum wie bisher zählen
+        weightSum += (r.weight || 1);
+      }
+    }
+
+    const dayCount = (seenDates.size > 0) ? seenDates.size : Math.max(1, records.length);
+    const denom = (state.avgMode === "weighted") ? (weightSum || 1) : (dayCount || 1);
+
+    return {
+      packSum, custSum, revSum,
+      packAvg: packSum / denom,
+      custAvg: custSum / denom,
+      revAvg: revSum / denom,
+      dayCount, weightSum
+    };
+  }
+
+  
+  function buildWeekdayChart(){
+    const elc = document.getElementById("weekdayChart");
+    if(!elc || typeof echarts === "undefined") return;
+
+    const recs = filteredRecords();
+    // Grouping: Mo-Sa (exclude Sunday)
+    const labels = ["Mo","Di","Mi","Do","Fr","Sa"];
+    const buckets = labels.map(()=>({sum:0,weightSum:0,dayCount:0}));
+
+    for(const r of recs){
+      if(!r.date) continue;
+      const d = new Date(r.date + "T00:00:00");
+      const wd = d.getDay(); // 0=So ... 6=Sa
+      if(wd === 0) continue; // Sonntag standardmäßig ausblenden
+      const idx = wd - 1; // 1..6 -> 0..5
+      const b = buckets[idx];
+      const v = metricValue(r);
+      const w = (typeof r.weight === 'number') ? r.weight : (r.weight||1);
+      b.sum += v;      b.weightSum += w;
+      b.dayCount += 1;
+    }
+
+    const useWeighted = (state.avgMode === "weighted");
+    const denom = (b) => (useWeighted ? (b.weightSum||1) : (b.dayCount||1));
+    const vals = buckets.map(b => b.sum / denom(b));
+const title = (state.avgMode === 'calendar')
+      ? `Wochentagsprofil (${metricLabel()} Ø pro Kalendertag)`
+      : `Wochentagsprofil (${metricLabel()} Ø gewichtet – Achtung: Samstag fiktiv)`;
+
+    const opt = {
+      title: { text: title, left: 10, top: 8, textStyle:{ color:"#fff", fontSize: 14, fontWeight: 600 } },
+      grid: { left: 48, right: 18, top: 52, bottom: 72, containLabel: true },
+      tooltip: {
+        trigger: "axis",
+        axisPointer: { type: "shadow" },
+        formatter: (params) => {
+          const i = params?.[0]?.dataIndex ?? 0;
+          const b = buckets[i];
+          const dnm = denom(b);
+          const avg = (b.sum/dnm);
+          const sum = b.sum;
+          const days = b.dayCount;
+          return `
+            <b>${labels[i]}</b><br/>
+            Ø: ${fmtMetricTooltip(avg)}<br/>
+            <span style="opacity:.8">Summe: ${fmtMetricTooltip(sum)} · Tage: ${days}</span>
+          `;
+        }
+      },
+      legend: { data: ["Ø"], bottom: 8, left: "center", textStyle:{ color:"rgba(255,255,255,0.85)" } },
+      xAxis: {
+        type: "category",
+        data: labels,
+        axisLabel: { color: "rgba(255,255,255,0.85)" },
+        axisTick: { show:false },
+        axisLine: { lineStyle:{ color:"rgba(255,255,255,0.20)" } }
+      },
+      yAxis: {
+        type: "value",
+        axisLabel: { color: "rgba(255,255,255,0.75)" },
+        splitLine: { lineStyle:{ color:"rgba(255,255,255,0.08)" } },
+        axisLine: { show:false }
+      },
+      series: [
+        { name:"Ø", type:"bar", data: vals, barMaxWidth: 38, emphasis:{ focus:"series" } }
+      ]};
+
+    
+    // Farbe wie Chart 1: eine Apotheke = Apothekenfarbe, mehrere/alle = Signalgelb
+    try{
+      const selPh = (typeof __getSumSelectedPharmacies === "function" ? (__getSumSelectedPharmacies() || []) : [])
+        .filter(x => x && String(x).toLowerCase() !== "all");
+      const hasColors = (typeof pharmacyColors !== "undefined" && pharmacyColors);
+            const barColor = (typeof __getSumSeriesColor === "function") ? __getSumSeriesColor() : SIGNAL_YELLOW;
+      if(opt && opt.series && opt.series[0]){
+        opt.series[0].itemStyle = opt.series[0].itemStyle || {};
+        opt.series[0].itemStyle.color = barColor;
+      }
+    }catch(e){}
+const echW = window.__echW || (window.__echW = echarts.init(elc));
+    echW.setOption(opt, true);
+  }
+
+function updateKpis(k){
+        const e_kpiPackSum = el("kpiPackSum"); if(e_kpiPackSum) e_kpiPackSum.textContent = fmtInt(k.packSum);
+        const e_kpiCustSum = el("kpiCustSum"); if(e_kpiCustSum) e_kpiCustSum.textContent = fmtInt(k.custSum);
+        const e_kpiPackAvg = el("kpiPackAvg"); if(e_kpiPackAvg) e_kpiPackAvg.textContent = fmt1(k.packAvg);
+        const e_kpiCustAvg = el("kpiCustAvg"); if(e_kpiCustAvg) e_kpiCustAvg.textContent = fmt1(k.custAvg);
+        const e_kpiRevSum = el("kpiRevSum"); if(e_kpiRevSum) e_kpiRevSum.textContent = fmtEur0(k.revSum);
+        const e_kpiRevAvg = el("kpiRevAvg"); if(e_kpiRevAvg) e_kpiRevAvg.textContent = fmtEur2(k.revAvg);
+
+    { const e = el("kpiBasisHint"); if(e) e.textContent = (state.avgMode === "weighted")
+      ? `Basis: ${fmt1(k.weightSum)} Volltage`
+      : `Basis: ${fmtInt(k.dayCount)} Kalendertage`; }
+
+    { const e = el("kpiModeHint"); if(e) e.textContent = (state.avgMode === "weighted")
+      ? "Gewichtet (Samstag/Halbtage = 0.5)"
+      : "Ungewichtet"; }
+  }
+
+  function buildWeekdayDescription(){
+    const box = document.getElementById("weekdayDesc");
+    if(!box) return;
+    const line1 = box.querySelector(".chart-desc-line");
+    const line2 = box.querySelector(".chart-desc-line2");
+
+    const y = (Array.isArray(state.years) && state.years.length) ? state.years.map(v=>parseInt(v,10)).filter(n=>!isNaN(n)).sort((a,b)=>a-b) : [];
+    const yrsText = (y.length===0) ? "" :
+      (y.length===1 ? `für das Jahr ${y[0]}` : `für die Jahre ${y[0]} bis ${y[y.length-1]}`);
+
+    const ph = (__getSumSelectedPharmacies() || []).filter(x => x && String(x).toLowerCase() !== "all");
+    const phText = (ph.length===0) ? "aller Apotheken" :
+      (ph.length===1 ? `der Apotheke ${ph[0]}` : `der Apotheken ${ph.join(" und ")}`);
+
+    const basisText = metricAvgBasisText();
+
+    const t1 = `Vergleich der ${basisText} ${phText} ${yrsText}.`.replace(/\s+/g," ").trim();
+    const t2 = "Mo–Sa: Balkenhöhe = Durchschnitt; Tooltip zeigt zusätzlich Summe und Anzahl Tage.";
+
+    if(line1) line1.textContent = t1;
+    if(line2) line2.textContent = t2;
+  }
+
+
+
+  function linearTrend(values){
+    const xs = [];
+    const ys = [];
+    for(let i=0;i<values.length;i++){
+      const v = values[i];
+      if(v === null || v === undefined) continue;
+      xs.push(i);
+      ys.push(v);
+    }
+    const n = xs.length;
+    if(n < 2) return values.map(_ => null);
+    let sumX=0,sumY=0,sumXX=0,sumXY=0;
+    for(let i=0;i<n;i++){
+      const x=xs[i], y=ys[i];
+      sumX += x; sumY += y; sumXX += x*x; sumXY += x*y;
+    }
+    const denom = (n*sumXX - sumX*sumX);
+    if(denom === 0) return values.map(_ => null);
+    const a = (n*sumXY - sumX*sumY) / denom; // slope
+    const b = (sumY - a*sumX) / n;           // intercept
+    return values.map((v,i) => (v===null||v===undefined) ? null : (a*i + b));
+  }
+
+  function aggregateContinuous(records){
+    const map = new Map();
+    for(const r of records){
+      const key = (state.granularity === "month")
+        ? `${r.year}-${String(r.month).padStart(2,"0")}`
+        : (state.granularity === "week")
+        ? `${(r.iso_year || r.year)}-KW${String(r.iso_week).padStart(2,"0")}`
+        : r.date;
+      if(!map.has(key)) map.set(key, 0);
+      map.set(key, map.get(key) + (Number(r[metricField()]) || 0));
+    }
+    const keys = Array.from(map.keys());
+    keys.sort((a,b) => {
+      if(state.granularity === "week"){
+        const [ya,wa] = a.split("-KW");
+        const [yb,wb] = b.split("-KW");
+        const ia = parseInt(ya,10)*100 + parseInt(wa,10);
+        const ib = parseInt(yb,10)*100 + parseInt(wb,10);
+        return ia - ib;
+      }
+      return a.localeCompare(b);
+    });
+    const ys = keys.map(k => map.get(k));
+    return { xLabels: keys, yValues: ys };
+  }
+
+  
+function __computeYearTrendComment(){
+  try{
+    // Summe: Jahres-Trend (ältestes vs. jüngstes ausgewähltes Jahr) – unabhängig von der aktuellen Auflösung
+    if(state.mode !== "sum") return null;
+    if(!Array.isArray(state.years) || state.years.length < 2) return null;
+
+    const ys = state.years.map(y=>parseInt(y,10)).filter(n=>!isNaN(n)).sort((a,b)=>a-b);
+    if(ys.length < 2) return null;
+
+    const sums = {};
+    for(const r of filteredRecords()){
+      if(!ys.includes(r.year)) continue;
+      const v = metricValue(r);
+      sums[r.year] = (sums[r.year] || 0) + v;
+    }
+
+    const oldest = ys[0];
+    const latest = ys[ys.length-1];
+    const a = (sums[oldest] || 0);
+    const b = (sums[latest] || 0);
+    if(a === 0 && b === 0) return null;
+    if(a === 0) return `Trend: ${oldest}: ${Math.round(a)} ${metricLabel()} → ${latest}: ${Math.round(b)} ${metricLabel()}.`;
+
+    const delta = b - a;
+    const pct = (delta / a) * 100;
+
+    const pctAbs = Math.abs(pct).toFixed(1).replace(".", ",");
+    const sign = pct < 0 ? "−" : "+";
+    const verdict = (pct < 0) ? "Verschlechterung" : "Verbesserung";
+
+    return `Trend: ${oldest}: ${Math.round(a)} ${metricLabel()} → ${latest}: ${Math.round(b)} ${metricLabel()} (${verdict} ${sign}${pctAbs} %).`;
+  }catch(e){
+    return null;
+  }
+}
+
+
+function __computeSingleYearTrendComment(){
+  try{
+    // Nur wenn genau ein Jahr gewählt ist UND Fortlaufend (weil nur dann Trendlinie sichtbar ist).
+    if(state.mode !== "sum") return null;
+    if(!Array.isArray(state.years) || state.years.length !== 1) return null;
+    if(state.granularity === "year") return null;
+    if(state.chartMode !== "continuous") return null;
+
+    // Tageswerte aus den gefilterten Records aufbauen (fehlende Tage werden ignoriert)
+    const map = {};
+    for(const r of filteredRecords()){
+      if(!r.date) continue;
+      const v = metricValue(r);
+      map[r.date] = (map[r.date] || 0) + v;
+    }
+    const dates = Object.keys(map).sort();
+    if(dates.length < 20) return null;
+
+    const ys = dates.map(d => map[d] || 0);
+    const trend = linearTrend(ys);
+
+    // first and last non-null trend points
+    let first = null, last = null;
+    for(let i=0;i<trend.length;i++){
+      const v = trend[i];
+      if(v===null || v===undefined || isNaN(v)) continue;
+      first = v;
+      break;
+    }
+    for(let i=trend.length-1;i>=0;i--){
+      const v = trend[i];
+      if(v===null || v===undefined || isNaN(v)) continue;
+      last = v;
+      break;
+    }
+    if(first===null || last===null) return null;
+    if(first === 0) return null;
+
+    const delta = last - first;
+    const pct = (delta / first) * 100;
+
+    const pctAbs = Math.abs(pct).toFixed(1).replace(".", ",");
+    const sign = pct < 0 ? "−" : "+";
+    const verdict = (pct < 0) ? "Verschlechterung" : "Verbesserung";
+
+    return `Trend (tagesbasiert): Gegenüber dem Periodenanfang ergibt sich am Periodenende eine ${verdict} von ${sign}${pctAbs} %.`;
+  }catch(e){
+    return null;
+  }
+}
+
+
+
+
+
+
+
+
+
+function buildChartContinuous(records){
+    const container = document.getElementById("chart2");
+    const ech2 = window.__ech2 || (window.__ech2 = echarts.init(container));
+    const agg = aggregateContinuous(records);
+  
+    const trend = linearTrend(agg.yValues);
+
+  const seriesColor = __getSumSeriesColor(); // FIX: define seriesColor for continuous sum chart
+
+    
+    const step = labelStep(agg.xLabels.length, 15);
+ech2.setOption({
+      backgroundColor: "transparent",
+      tooltip: { trigger:"axis", axisPointer:{type:"line"}, formatter:(params)=>{ if(!params||!params.length) return ""; const x=formatXContinuous(params[0].axisValue); let lines=[`<b>${x}</b>`]; for(const p of params){ const v=(p.value===null||p.value===undefined)?"–":fmtNumDE(p.value); lines.push(`${p.marker} ${p.seriesName}: ${v}`);} return lines.join("<br/>"); } },
+      legend: { top: 0, textStyle:{color:"rgba(255,255,255,0.80)"} },
+      grid: { left: 48, right: 22, top: 44, bottom: 74, containLabel: true },
+      xAxis: {
+        type:"category",
+        data: agg.xLabels,
+        name: (state.granularity === "month") ? "Monat" : (state.granularity === "week") ? "Woche" : "Tag",
+        nameLocation:"middle",
+        nameGap: 52,
+        nameTextStyle:{color:"rgba(255,255,255,0.65)",
+          margin: 14, fontWeight:700},
+        nameTextStyle:{color:"rgba(255,255,255,0.65)"},
+        axisLabel:{color:"rgba(255,255,255,0.65)",
+          margin: 14, interval:(idx)=> (idx % step)===0, hideOverlap:true, rotate:(state.granularity==="day")?45:0, formatter:(v)=> formatXContinuous(v)},
+        axisTick:{alignWithLabel:true, interval:(idx)=> (idx % step)===0},
+        axisLine:{lineStyle:{color:"rgba(255,255,255,0.18)"}} // FIX: keep axis neutral
+      },
+      yAxis: {
+        type:"value",
+        name:metricLabel(),
+        nameTextStyle:{color:"rgba(255,255,255,0.65)"},
+        axisLabel:{color:"rgba(255,255,255,0.65)", formatter:(v)=> fmtMetricAxis(v)},
+        splitLine:{lineStyle:{color:"rgba(255,255,255,0.10)"}}
+      },
+      series: [
+        { name: metricSeriesName(), type:"line", connectNulls:true, showSymbol:false, smooth:true, data: agg.yValues, lineStyle:{width:3, color: seriesColor}, itemStyle:{color: seriesColor} },
+        { name: "Trend", type:"line", connectNulls:true, showSymbol:false, smooth:false, data: trend,
+          lineStyle:{type:"dotted", width:2}, tooltip:{show:false} }
+      ]
+    }, true);
+
+    window.addEventListener("resize", () => ech2.resize());
+  }
+
+  function setChartMode(mode){
+    state.chartMode = mode;
+    const showOverlay = mode === "overlay";
+    document.getElementById("chart").style.display = showOverlay ? "block" : "none";
+    document.getElementById("chart2").style.display = showOverlay ? "none" : "block";
+    document.getElementById("btnChartOverlay").classList.toggle("active", showOverlay);
+    document.getElementById("btnChartContinuous").classList.toggle("active", !showOverlay);
+
+    const title = document.getElementById("chartTitle");
+    if(title){
+      if(title) title.textContent = showOverlay
+        ? `${metricLabel()} • Jahresvergleich`
+        : `${metricLabel()} • Fortlaufend`;
+    }
+
+    if(showOverlay && window.__ech) window.__ech.resize();
+    if(!showOverlay && window.__ech2) window.__ech2.resize();
+    buildChartDescription();
+    updateChartTitle();
+  
+    // switch between Jahresvergleich/Fortlaufend -> always re-render charts + KPIs
+    try{ refreshView(); }catch(e){ console.error(e); }
+}
+
+
+    
+
+function buildChartCompareYearOverlay(records, pharmacies){
+  const metric = metricField();
+  const years = (state.years || []).map(y=>parseInt(y,10)).filter(n=>!isNaN(n)).sort((a,b)=>a-b);
+  if(!years.length){ window.__ech?.clear(); return; }
+  const yearSet = new Set(years.map(String));
+  const sums = {}; for(const p of pharmacies) sums[p] = new Map();
+  for(const r of records){
+    if(!sums[r.apotheke]) continue;
+    const y = String(r.year);
+    if(!yearSet.has(y)) continue;
+    const v = Number(r[metric]) || 0;
+    sums[r.apotheke].set(y, (sums[r.apotheke].get(y)||0) + v);
+  }
+  const xs = years.map(String);
+  const series = pharmacies.map(p => ({
+    name: p,
+    type: "bar",
+    data: xs.map(y => sums[p].get(y) ?? 0),
+    itemStyle: { color: pharmacyColors[p] || undefined },
+    barMaxWidth: 36
+  }));
+  const opt = {
+    animation:false,
+    legend:{ top:0, textStyle:{color:"rgba(255,255,255,0.80)"} },
+    tooltip:{
+      trigger:"axis",
+      axisPointer:{ type:"shadow" },
+      backgroundColor:"rgba(20,20,24,0.92)",
+      borderColor:"rgba(255,255,255,0.12)",
+      textStyle:{color:"rgba(255,255,255,0.92)"},
+      formatter:(params)=>{
+        const year = params?.[0]?.axisValue ?? "";
+        const lines=[`<b>Jahr ${year}</b>`];
+        for(const p of params) lines.push(`${p.marker} ${p.seriesName}: ${fmtNumDE(p.data)}`);
+        return lines.join("<br/>");
+      }
+    },
+    grid:{ left:78, right:24, top:44, bottom:78, containLabel:true },
+    xAxis:{ type:"category", data: xs, name:"Jahr", nameLocation:"middle", nameGap:52,
+      axisLabel:{color:"rgba(255,255,255,0.68)"},
+      axisLine:{lineStyle:{color:"rgba(255,255,255,0.18)"}},
+      axisTick:{show:false}
+    },
+    yAxis:{ type:"value", name:metricLabel(), nameLocation:"end",
+      nameTextStyle:{color: "rgba(255,255,255,0.68)", padding:[0,0,8,0]},
+      axisLabel:{color: "rgba(255,255,255,0.68)", formatter:(v)=>fmtNumDE(v)},
+      splitLine:{lineStyle:{color:"rgba(255,255,255,0.08)"}},
+      axisLine:{show:false}
+    },
+    series
+  };
+  window.__lastChartTarget="chart";
+    try{ if(state && state.mode==='compare'){ applyCompareAxisTitleStyle(opt); } }catch(e){}
+    try{ applyCompareOverlayXAxisTitleFix(opt); }catch(e){}
+  window.__ech?.setOption(opt, true);
+}
+
+function buildChartCompareYearContinuous(records, pharmacies){
+  const metric = metricField();
+  const years = (state.years || []).map(y=>parseInt(y,10)).filter(n=>!isNaN(n)).sort((a,b)=>a-b);
+  if(!years.length){ window.__ech2?.clear(); return; }
+  const yearSet = new Set(years.map(String));
+  const sums = {}; for(const p of pharmacies) sums[p] = new Map();
+  for(const r of records){
+    if(!sums[r.apotheke]) continue;
+    const y = String(r.year);
+    if(!yearSet.has(y)) continue;
+    const v = Number(r[metric]) || 0;
+    sums[r.apotheke].set(y, (sums[r.apotheke].get(y)||0) + v);
+  }
+  const xs = years.map(String);
+  const series = pharmacies.map(p => ({
+    name:p,
+    type:"line",
+    showSymbol:true,
+    symbolSize:8,
+    data: xs.map(y => sums[p].get(y) ?? null),
+    connectNulls:true,
+    lineStyle:{ width:2, color: pharmacyColors[p] || undefined },
+    itemStyle:{ color: pharmacyColors[p] || undefined },
+    emphasis:{ focus:"series" }
+  }));
+  const opt = {
+    animation:false,
+    legend:{ top:0, textStyle:{color:"rgba(255,255,255,0.80)"} },
+    tooltip:{
+      trigger:"axis",
+      backgroundColor:"rgba(20,20,24,0.92)",
+      borderColor:"rgba(255,255,255,0.12)",
+      textStyle:{color:"rgba(255,255,255,0.92)"},
+      formatter:(params)=>{
+        const year = params?.[0]?.axisValue ?? "";
+        const lines=[`<b>Jahr ${year}</b>`];
+        for(const p of params){ if(p.data==null) continue; lines.push(`${p.marker} ${p.seriesName}: ${fmtNumDE(p.data)}`); }
+        return lines.join("<br/>");
+      }
+    },
+    grid:{ left:78, right:24, top:44, bottom:78, containLabel:true },
+    xAxis:{ type:"category", data: xs, name:"Jahr", nameLocation:"middle", nameGap:52,
+      axisLabel:{color:"rgba(255,255,255,0.68)"},
+      axisLine:{lineStyle:{color:"rgba(255,255,255,0.18)"}},
+      axisTick:{show:false}
+    },
+    yAxis:{ type:"value", name:metricLabel(), nameLocation:"end",
+      nameTextStyle:{color: "rgba(255,255,255,0.68)", padding:[0,0,8,0]},
+      axisLabel:{color: "rgba(255,255,255,0.68)", formatter:(v)=>fmtNumDE(v)},
+      splitLine:{lineStyle:{color:"rgba(255,255,255,0.08)"}},
+      axisLine:{show:false}
+    },
+    series
+  };
+    try{ if(state && state.mode==='compare'){ applyCompareAxisTitleStyle(opt); } }catch(e){}
+    try{ applyCompareOverlayXAxisTitleFix(opt); }catch(e){}
+  window.__ech2?.setOption(opt, true);
+}
+
+function buildChartCompareOverlay(records, pharmacies){
+    // Year compare: grouped bars (series = pharmacies, x = selected years)
+    if(state.granularity === "year"){
+      const years = (state.years || []).map(y=>parseInt(y,10)).filter(n=>!isNaN(n)).sort((a,b)=>a-b);
+      if(!years.length){
+        window.__ech?.clear();
+        return;
+      }
+      const yearSet = new Set(years.map(String));
+      const sums = {};
+      for(const p of pharmacies) sums[p] = new Map();
+      for(const r of records){
+        if(!sums[r.apotheke]) continue;
+        const y = String(r.year);
+        if(!yearSet.has(y)) continue;
+        const v = Number(r.packungen) || 0;
+        sums[r.apotheke].set(y, (sums[r.apotheke].get(y) || 0) + v);
+      }
+      const xs = years.map(String);
+      const series = pharmacies.map(p => ({
+        name: p,
+        type: "bar",
+        data: xs.map(y => sums[p].get(y) ?? 0),
+        itemStyle: { color: pharmacyColors[p] || undefined },
+        barMaxWidth: 36
+      }));
+      const opt = {
+        animation:false,
+        legend:{ top:0, textStyle:{color:"rgba(255,255,255,0.80)"} },
+        tooltip:{
+          trigger:"axis",
+          axisPointer:{ type:"shadow" },
+          backgroundColor:"rgba(20,20,24,0.92)",
+          borderColor:"rgba(255,255,255,0.12)",
+          textStyle:{color:"rgba(255,255,255,0.92)"},
+          formatter:(params)=>{
+            const yr = params?.[0]?.axisValue ?? "";
+            const lines=[`<b>Jahr ${yr}</b>`];
+            for(const p of params){
+              lines.push(`${p.marker} ${p.seriesName}: ${fmtNumDE(p.data)}`);
+            }
+            return lines.join("<br/>");
+          }
+        },
+        grid:{ left:78, right:24, top:44, bottom:78, containLabel:true },
+        xAxis:{
+          type:"category",
+          data: xs,
+          name:"Jahr",
+          nameLocation:"middle",
+          nameGap:52,
+          nameTextStyle:{ color:"rgba(255,255,255,0.68)", fontWeight:600 },
+          axisLabel:{ color: "rgba(255,255,255,0.68)" },
+          axisLine:{ lineStyle:{ color:"rgba(255,255,255,0.18)" } },
+          axisTick:{ show:false }
+        },
+        yAxis:{
+          type:"value",
+          name:metricLabel(),
+          nameLocation:"end",
+          nameTextStyle:{ color: "rgba(255,255,255,0.68)", padding:[0,0,8,0] },
+          axisLabel:{ color:"rgba(255,255,255,0.70)", formatter:(v)=>fmtNumDE(v) },
+          splitLine:{ lineStyle:{ color:"rgba(255,255,255,0.08)" } },
+          axisLine:{ show:false }
+        },
+        series
+      };
+      window.__lastChartTarget="chart";
+    try{ if(state && state.mode==='compare'){ applyCompareAxisTitleStyle(opt); } }catch(e){}
+    try{ applyCompareOverlayXAxisTitleFix(opt); }catch(e){}
+  window.__ech?.setOption(opt, true);
+      return;
+    }
+    const year = pickCompareYear(records);
+    const xMax = (state.granularity === "month") ? 12 : (state.granularity === "week") ? 53 : 366;
+    const xLabel = (state.granularity === "month") ? "Monat" : (state.granularity === "week") ? "KW" : "Tag im Jahr";
+    const xs = [];
+    for(let x=1; x<=xMax; x++) xs.push(x);
+
+    const maps = {};
+    for(const p of pharmacies) maps[p] = new Map();
+
+    for(const r of records){
+      if(r.year !== year) continue;
+      if(!maps[r.apotheke]) continue;
+      const x = (state.granularity === "month") ? r.month : (state.granularity === "week") ? r.iso_week : r.day_of_year;
+      if(!x) continue;
+      maps[r.apotheke].set(x, (maps[r.apotheke].get(x) || 0) + (Number(r[metricField()]) || 0));
+    }
+
+    const step = labelStep(xs.length, 15);
+    const ech = window.__ech || (window.__ech = echarts.init(document.getElementById("chart")));
+    const series = pharmacies.map((p) => {
+      const map = maps[p] || new Map();
+      const data = xs.map(x => (map.has(x) ? map.get(x) : null));
+      const color = PHARM_COLORS[p];
+      return {
+        name: p,
+        type:"line",
+        connectNulls:true,
+        showSymbol:false,
+        smooth:true,
+        data,
+        lineStyle: color ? { color } : undefined,
+        itemStyle: color ? { color } : undefined
+      };
+    });
+
+    ech.setOption({
+      backgroundColor: "transparent",
+      tooltip: {
+        trigger:"axis",
+        axisPointer:{type:"line"},
+        formatter:(params)=>{
+          if(!params || !params.length) return "";
+          const x = params[0].axisValueLabel ?? params[0].axisValue;
+          const xTxt = (state.granularity === "week") ? `KW ${String(x).padStart(2,"0")}` : `Tag ${x}`;
+          let lines = [`<b>${xTxt} / ${year}</b>`];
+          for(const p of params){
+            if(p.data == null) continue;
+            lines.push(`${p.marker} ${p.seriesName}: ${fmtNumDE(p.data)}`);
+          }
+          return lines.join("<br/>");
+        }
+      },
+      legend: { top: 0, textStyle:{color:"rgba(255,255,255,0.80)"} },
+      grid: { left: 58, right: 24, top: 44, bottom: 78, containLabel:true },
+      xAxis: {
+        type:"category",
+        data: xs,
+        name: xLabel,
+        nameLocation:"middle",
+        nameGap: 50,
+        axisLabel:{color:"rgba(255,255,255,0.65)", interval:(idx)=> (idx % step)!==0 ? "" : xs[idx]},
+        axisTick:{alignWithLabel:true, interval:(idx)=> (idx % step)===0},
+        axisLine:{lineStyle:{color:"rgba(255,255,255,0.20)"}}
+      },
+      yAxis: {
+        type:"value",
+        name:metricLabel(),
+        nameTextStyle:{color:"rgba(255,255,255,0.65)"},
+        axisLabel:{color:"rgba(255,255,255,0.65)", formatter:(v)=> fmtMetricAxis(v)},
+        splitLine:{lineStyle:{color:"rgba(255,255,255,0.10)"}}
+      },
+      series
+    }, { notMerge:true });
+    // Force x-axis TITLE contrast in Apothekenvergleich + Jahresvergleich for Tag/Woche/Monat
+    // (ECharts overlay states can mute axis.nameTextStyle; re-apply right after setOption)
+    try{
+      if(state && state.mode==="compare" && state.chartMode==="overlay" && (state.granularity==="day" || state.granularity==="week" || state.granularity==="month")){
+        // Apply on both possible chart instances (ech / ech2) if available in this scope.
+        try{ if(typeof ech!=="undefined" && ech){ ech.setOption({ xAxis: { nameTextStyle: { color:"rgba(255,255,255,0.86)", fontWeight:600 } } }, { notMerge:false }); } }catch(e){}
+        try{ if(typeof ech2!=="undefined" && ech2){ ech2.setOption({ xAxis: { nameTextStyle: { color:"rgba(255,255,255,0.86)", fontWeight:600 } } }, { notMerge:false }); } }catch(e){}
+      }
+    }catch(e){}
+  }
+
+  function buildChartCompareContinuous(records, pharmacies){
+    const keySet = new Set();
+    const seriesMaps = {};
+    for(const p of pharmacies) seriesMaps[p] = new Map();
+
+    for(const r of records){
+      if(!seriesMaps[r.apotheke]) continue;
+      const key = (state.granularity === "year")
+        ? String(r.year)
+        : (state.granularity === "month")
+        ? `${r.year}-${String(r.month).padStart(2,"0")}`
+        : (state.granularity === "week")
+        ? `${(r.iso_year || r.year)}-KW${String(r.iso_week).padStart(2,"0")}`
+        : r.date;
+      if(!key) continue;
+      keySet.add(key);
+      seriesMaps[r.apotheke].set(key, (seriesMaps[r.apotheke].get(key) || 0) + (Number(r[metricField()]) || 0));
+    }
+
+    const keys = Array.from(keySet);
+    keys.sort((a,b)=>{
+      if(state.granularity === "week"){
+        const [ya,wa] = a.split("-KW");
+        const [yb,wb] = b.split("-KW");
+        return (parseInt(ya,10)*100+parseInt(wa,10)) - (parseInt(yb,10)*100+parseInt(wb,10));
+      }
+      return a.localeCompare(b);
+    });
+
+    const step = labelStep(keys.length, 15);
+    const ech2 = window.__ech2 || (window.__ech2 = echarts.init(document.getElementById("chart2")));
+
+    const series = pharmacies.map((p)=>{
+      const map = seriesMaps[p] || new Map();
+      const data = keys.map(k => (map.has(k) ? map.get(k) : null));
+      const color = PHARM_COLORS[p];
+      return {
+        name: p,
+        type:"line",
+        connectNulls:true,
+        showSymbol:(state.granularity==="year"),
+        smooth:true,
+        data,
+        lineStyle: color ? { color } : undefined,
+        itemStyle: color ? { color } : undefined
+      };
+    });
+
+    ech2.setOption({
+      backgroundColor:"transparent",
+      tooltip:{
+        trigger:"axis",
+        axisPointer:{type:"line"},
+        formatter:(params)=>{
+          if(!params || !params.length) return "";
+          let label = params[0].axisValueLabel ?? params[0].axisValue;
+          if(state.granularity==="year"){ label = `Jahr ${label}`; }
+          if(state.granularity==="month" && typeof label==="string" && label.includes("-")){ const [y,m]=label.split("-"); if(y&&m) label = `${m}/${y}`; }
+          let lines = [`<b>${label}</b>`];
+          for(const p of params){
+            if(p.data == null) continue;
+            lines.push(`${p.marker} ${p.seriesName}: ${fmtNumDE(p.data)}`);
+          }
+          return lines.join("<br/>");
+        }
+      },
+      legend:{ top:0, textStyle:{color:"rgba(255,255,255,0.80)"} },
+      grid:{ left:58, right:24, top:44, bottom:78, containLabel:true },
+      xAxis:{
+        type:"category",
+        data: keys,
+        name: (state.granularity === "year") ? "Jahr" : (state.granularity === "month") ? "Monat" : (state.granularity === "week") ? "Woche" : "Tag",
+        nameLocation:"middle",
+        nameGap: 52,
+        nameTextStyle:{color:"rgba(255,255,255,0.65)", margin: 14, fontWeight:700},
+          axisLabel:{
+          color:"rgba(255,255,255,0.65)",
+          margin: 14,
+          padding:[6,0,0,0],
+          lineHeight: 14,
+          interval:(idx)=> (idx % step)===0,
+          rotate:(state.granularity==="day") ? 45 : 0,
+          align:(state.granularity==="day") ? "right" : "center",
+          verticalAlign:"middle",
+          formatter:(v)=> formatXContinuous(v)
+        },
+        axisTick:{alignWithLabel:true, interval:(idx)=> (idx % step)===0},
+        axisLine:{lineStyle:{color:"rgba(255,255,255,0.20)"}}
+      },
+      yAxis:{
+        type:"value",
+        name:metricLabel(),
+        nameTextStyle:{color:"rgba(255,255,255,0.65)"},
+        axisLabel:{color:"rgba(255,255,255,0.65)", formatter:(v)=> fmtMetricAxis(v)},
+        splitLine:{lineStyle:{color:"rgba(255,255,255,0.10)"}}
+      },
+      series
+    }, { notMerge:true });
+    // Force x-axis TITLE contrast in Apothekenvergleich + Jahresvergleich for Tag/Woche/Monat
+    // (ECharts overlay states can mute axis.nameTextStyle; re-apply right after setOption)
+    try{
+      if(state && state.mode==="compare" && state.chartMode==="overlay" && (state.granularity==="day" || state.granularity==="week" || state.granularity==="month")){
+        // Apply on both possible chart instances (ech / ech2) if available in this scope.
+        try{ if(typeof ech!=="undefined" && ech){ ech.setOption({ xAxis: { nameTextStyle: { color:"rgba(255,255,255,0.86)", fontWeight:600 } } }, { notMerge:false }); } }catch(e){}
+        try{ if(typeof ech2!=="undefined" && ech2){ ech2.setOption({ xAxis: { nameTextStyle: { color:"rgba(255,255,255,0.86)", fontWeight:600 } } }, { notMerge:false }); } }catch(e){}
+      }
+    }catch(e){}
+  }
+
+
+function buildChart(seriesByYear){
+    const years = Object.keys(seriesByYear).map(x => parseInt(x,10)).sort((a,b)=>b-a); // newest first
+    const seriesColor = __getSumSeriesColor();
+    const xMax = (state.granularity === "month") ? 12 : (state.granularity === "week") ? 53 : 366;
+    const xLabel = (state.granularity === "week") ? "KW" : "Tag im Jahr";
+
+    const xs = [];
+    for(let x=1; x<=xMax; x++) xs.push(x);
+
+    
+    const step = labelStep(xs.length, 15);
+const ech = window.__ech || (window.__ech = echarts.init(document.getElementById("chart")));
+    const series = years.map((y, idx) => {
+      const map = seriesByYear[y] || new Map();
+      const data = xs.map(x => {
+        const cell = map.get(x);
+        return cell ? cell.sumVal : null;
+      });
+      return { name: String(y), type:"line",
+        lineStyle:{width:2,color:seriesColor,opacity:(function(){
+          const n = years.length;
+          if(n<=1) return 1.0;
+          if(n===2) return (idx===0 ? 1.0 : 0.5);
+          if(n===3) return (idx===0 ? 1.0 : idx===1 ? 0.75 : 0.5);
+          if(n===4) return (idx===0 ? 1.0 : idx===1 ? 0.75 : idx===2 ? 0.5 : 0.25);
+          // n>4
+          return (idx===0 ? 1.0 : idx===1 ? 0.75 : idx===2 ? 0.5 : 0.25);
+        })()},
+        itemStyle:{color:seriesColor,opacity:(function(){
+          const n = years.length;
+          if(n<=1) return 1.0;
+          if(n===2) return (idx===0 ? 1.0 : 0.5);
+          if(n===3) return (idx===0 ? 1.0 : idx===1 ? 0.75 : 0.5);
+          if(n===4) return (idx===0 ? 1.0 : idx===1 ? 0.75 : idx===2 ? 0.5 : 0.25);
+          // n>4
+          return (idx===0 ? 1.0 : idx===1 ? 0.75 : idx===2 ? 0.5 : 0.25);
+        })()}, connectNulls:true, connectNulls:true, showSymbol:false, smooth:true, data };
+    });
+
+    ech.setOption({
+      color:[seriesColor],
+      backgroundColor: "transparent",
+      tooltip: {
+        trigger:"axis",
+        axisPointer:{type:"line"},
+        formatter:(params)=>{
+          if(!params || !params.length) return "";
+          // axisValue is x (KW number or day index)
+          const x = params[0].axisValueLabel ?? params[0].axisValue;
+          let lines = [`<b>${x}</b>`];
+          for(const p of params){
+            if(p.value === null || p.value === undefined) continue; // skip missing
+            lines.push(`${p.marker} ${p.seriesName}: ${fmtNumDE(p.value)}`);
+          }
+          return lines.join("<br/>");
+        }
+      },
+      legend: { top: 0, textStyle:{color:"rgba(255,255,255,0.80)"} },
+      grid: { left: 48, right: 22, top: 44, bottom: 54, containLabel: true },
+      xAxis: {
+        type:"category",
+        data: xs.map(String),
+        name: (state.granularity === "month") ? "Monat" : (state.granularity === "week") ? "Woche" : "Tag",
+        nameLocation:"middle",
+        nameGap: 36,
+        nameTextStyle:{color:"rgba(255,255,255,0.65)", fontWeight:700},
+        nameTextStyle:{color:"rgba(255,255,255,0.65)"},
+        axisLabel:{color:"rgba(255,255,255,0.65)", interval:(idx)=> (idx % step)===0},
+        axisTick:{alignWithLabel:true, interval:(idx)=> (idx % step)===0},
+        axisLine:{lineStyle:{color:"rgba(255,255,255,0.20)"}}
+      },
+      yAxis: {
+        type:"value",
+        name:metricLabel(),
+        nameTextStyle:{color:"rgba(255,255,255,0.65)"},
+        axisLabel:{color:"rgba(255,255,255,0.65)", formatter: (v)=> fmtNumDE(v)},
+        splitLine:{lineStyle:{color:"rgba(255,255,255,0.10)"}}
+      },
+      series
+    }, true);
+
+    window.addEventListener("resize", () => ech.resize());
+  }
+
+  
+function getBaseRecordsForCompare(){
+  // Start from full dataset, then apply date-range + year selection + remove zero rows.
+  const all = (state.records || []);
+  const yset = new Set((state.years || []).map(String));
+  const minD = state.startDate ? new Date(state.startDate) : null;
+  const maxD = state.endDate ? new Date(state.endDate) : null;
+
+  return all.filter(r=>{
+    if(!r) return false;
+    // ignore null/zero rows already flagged
+    if(r.__isZeroRow) return false;
+    // date range
+    if(r.dateObj){
+      if(minD && r.dateObj < minD) return false;
+      if(maxD && r.dateObj > maxD) return false;
+    }
+    // year selection
+    const y = String(r.year);
+    if(yset.size && !yset.has(y)) return false;
+    return true;
+  });
+}
+
+
+function bindExtraRefreshListeners(){
+  const pharma = document.getElementById("pharmacySelect");
+  const years = document.getElementById("yearSelect");
+  if(pharma) pharma.addEventListener("change", ()=>{ try{ refreshView(); }catch(e){ console.error(e);} });
+  if(years) years.addEventListener("change", ()=>{ try{ refreshView(); }catch(e){ console.error(e);} });
+
+  document.querySelectorAll('[data-gran]').forEach(btn=>btn.addEventListener("click", ()=>{ try{ refreshView(); }catch(e){ console.error(e);} }));
+  document.querySelectorAll('[data-chartmode]').forEach(btn=>btn.addEventListener("click", ()=>{ try{ refreshView(); }catch(e){ console.error(e);} }));
+}
+
+
+
+var AXIS_LABEL_COLOR = "rgba(255,255,255,0.68)";
+var AXIS_TITLE_COLOR_COMPARE = "rgba(255,255,255,0.82)";
+function _safeMuted(){
+  return AXIS_LABEL_COLOR;
+}
+function applyCompareXAxisStyle(){  // Ensure compare mode x-axis title is readable (this was drifting darker than other labels).
+  try{
+    if(!state || state.mode!=="compare") return;
+
+    const labelCol = AXIS_LABEL_COLOR;
+    const titleCol = AXIS_TITLE_COLOR_COMPARE;
+
+    // ECharts accepts xAxis as array; we patch index 0 to be safe across builders.
+    const optPatch = { xAxis: [ { nameTextStyle:{ color: titleCol, fontWeight:600 }, axisLabel:{ color: labelCol } } ] };
+
+    try{ if(state && state.mode==='compare'){ applyCompareAxisTitleStyle(opt); } }catch(e){}
+    try{ applyCompareOverlayXAxisTitleFix(opt); }catch(e){}
+    try{ if(window.__ech){ window.__ech.setOption(optPatch, { notMerge:false, lazyUpdate:true }); } }catch(e){}
+    try{ if(state && state.mode==='compare'){ applyCompareAxisTitleStyle(opt); } }catch(e){}
+    try{ applyCompareOverlayXAxisTitleFix(opt); }catch(e){}
+    try{ if(window.__ech2){ window.__ech2.setOption(optPatch, { notMerge:false, lazyUpdate:true }); } }catch(e){}
+  }catch(e){}}
+
+function _wrapChartSetOption(inst){
+  try{
+    if(!inst || !inst.setOption || inst.__fa_wrapped) return;
+    const orig = inst.setOption.bind(inst);
+    inst.setOption = function(option, opts, lazy){
+      // Support both (option, opts) and legacy (option, notMerge, lazyUpdate)
+      let res;
+      try{ res = orig(option, opts, lazy); }catch(e){
+        // fallback: some versions use (option, notMerge, lazyUpdate)
+        try{ res = orig(option, opts === undefined ? false : opts, lazy); }catch(e2){ throw e2; }
+      }
+      try{
+        if(typeof state !== "undefined" && state && state.mode === "compare"){
+          const muted = _safeMuted();
+          // Force TITLE (nameTextStyle) AFTER every setOption in compare mode
+          try{ orig({ xAxis: { nameTextStyle:{ color: muted, fontWeight:600 } } }, { notMerge:false, lazyUpdate:true }); }catch(e3){}
+          try{ orig({ xAxis: [{ nameTextStyle:{ color: muted, fontWeight:600 } }] }, { notMerge:false, lazyUpdate:true }); }catch(e4){}
+        }
+      }catch(e5){}
+      return res;
+    };
+    inst.__fa_wrapped = true;
+  }catch(e){}
+}
+
+
+
+function applyCompareAxisTitleStyle(option){
+  // Ensures x-axis TITLE (nameTextStyle) is consistent in Apothekenvergleich (all granularities/modes).
+  try{
+    const titleStyle = { color: "rgba(255,255,255,0.68)", fontWeight: 600 };
+    const patchOne = (xa) => {
+      if(!xa) return;
+      if(typeof xa.name === "string" && xa.name.length){
+        xa.nameTextStyle = Object.assign({}, (xa.nameTextStyle||{}), titleStyle);
+      }
+    };
+    if(Array.isArray(option.xAxis)) option.xAxis.forEach(patchOne);
+    else if(option.xAxis && typeof option.xAxis === "object") patchOne(option.xAxis);
+  }catch(e){}
+}
+
+function applyCompareOverlayXAxisTitleFix(opt){
+  // Fix: In Apothekenvergleich + Jahresvergleich (Overlay) the x-axis TITLE (nameTextStyle) was too dark for month/week/day.
+  // We only touch the title color; no routing/state changes.
+  try{
+    if(!state || state.mode!=='compare') return;
+    if(state.chartMode!=='overlay') return;
+    if(!(state.granularity==='day' || state.granularity==='week' || state.granularity==='month')) return;
+    const titleColor = (typeof AXIS_TITLE_COLOR_COMPARE!=='undefined') ? AXIS_TITLE_COLOR_COMPARE : "rgba(255,255,255,0.68)";
+    const patchOne = (xa) => {
+      if(!xa) return;
+      if(typeof xa.name === "string" && xa.name.length){
+        xa.nameTextStyle = Object.assign({}, (xa.nameTextStyle||{}), { color: titleColor, fontWeight: 600 });
+      }
+    };
+    if(Array.isArray(opt.xAxis)) opt.xAxis.forEach(patchOne);
+    else if(opt.xAxis && typeof opt.xAxis === "object") patchOne(opt.xAxis);
+  }catch(e){}
+}
+
+function __getSumSelectedPharmacies(){
+  try{
+    // Prefer state if present
+    if(window.state){
+      if(Array.isArray(state.selectedPharmacies) && state.selectedPharmacies.length) return state.selectedPharmacies.slice();
+      if(Array.isArray(state.pharmacies) && state.pharmacies.length) return state.pharmacies.slice();
+      if(typeof state.apotheke === "string" && state.apotheke) return [state.apotheke];
+    }
+    // Try DOM multi-select
+    const sel = document.getElementById("pharmacy") || document.getElementById("apothekeSelect") || document.querySelector('select[name="apotheke"], select[data-role="apotheke"], select#pharmacy');
+    if(sel && sel.options){
+      const vals = [];
+      for(const o of sel.options){ if(o.selected && o.value) vals.push(o.value); }
+      if(vals.length) return vals;
+    }
+    // Fallback existing helper
+    if(typeof getSelectedPharmacies === "function") return getSelectedPharmacies();
+  }catch(e){}
+  return ["ALL"];
+}
+
+  // SUM mode series color:
+  // - exactly one pharmacy selected (not ALL) => that pharmacy color
+  // - else (ALL or multiple) => signal yellow
+  function __getSumSeriesColor(){
+    const sel = __getSumSelectedPharmacies();
+    const SIGNAL_YELLOW = "#FFE600";
+    try{
+      if(Array.isArray(sel) && sel.length===1 && sel[0] && sel[0] !== "ALL" && typeof pharmacyColors === "object" && pharmacyColors[sel[0]]){
+        return pharmacyColors[sel[0]];
+      }
+    }catch(e){}
+    return SIGNAL_YELLOW;
+  }
+
+
+
+function refreshView(){
+  try{
+
+  try{ buildWeekdayChart();
+      try{ buildWeekdayDescription(); }catch(e){} }catch(e){}
+}catch(e){}
+
+  state.reqSeq = (state.reqSeq || 0) + 1;
+  const __seq = state.reqSeq;
+
+    const recs = filteredRecords();
+    window.__lastDebugRecs = recs;
+    updateCompareDebug(recs);
+
+    // HARD ROUTE: Compare + Year + Fortlaufend must render lines per pharmacy (never sum)
+    if(state.mode === "compare" && state.granularity === "year" && state.chartMode === "continuous"){
+      const baseRecs = getBaseRecordsForCompare();
+      const phs = (typeof getComparePharmacies === "function") ? getComparePharmacies(baseRecs)
+                : (typeof getSelectedPharmaciesUI === "function" ? getSelectedPharmaciesUI().filter(v=>v!=="ALL") : []);
+      buildCompareYearLines(baseRecs, phs);
+      try{
+}catch(e){ console.error(e);} 
+      updateCompareDebug(baseRecs);
+      try{
+}catch(e){}
+      return;
+    }
+
+    // EARLY: Compare + Year render path (avoid falling through to any legacy builders)
+    if(state.mode === "compare" && state.granularity === "year"){
+      const phs = (typeof getComparePharmacies === "function") ? getComparePharmacies(recs)
+                : (typeof getSelectedPharmaciesUI === "function" ? getSelectedPharmaciesUI().filter(v=>v!=="ALL") : []);
+      const baseRecs = getBaseRecordsForCompare();
+      if(state.chartMode === "continuous"){
+      // lock: clear overlay chart so it cannot overwrite
+      if(window.__ech){ window.__ech.clear(); 
+      return;
+    }
+        buildCompareYearLines(baseRecs, phs);
+      } else {
+        buildCompareYearBars(baseRecs, phs);
+      }
+      setPackungenTitleSuffix();
+      updateCompareDebug(recs);
+      return;
+    }
+
+    // FORCE: Apothekenvergleich + Jahr soll IMMER clientseitig pro Apotheke gerendert werden (keine Summen-Aggregation)
+    if(state.mode === "compare" && state.granularity === "year"){
+      const phs = (typeof getComparePharmacies === "function") ? getComparePharmacies(recs)
+                : (typeof getSelectedPharmaciesUI === "function" ? getSelectedPharmaciesUI().filter(v=>v!=="ALL") : []);
+      if(state.chartMode === "continuous"){
+      // lock: clear overlay chart so it cannot overwrite
+      if(window.__ech){ window.__ech.clear(); }
+        window.__lastChartBuilder = "buildCompareYearLines";
+        buildCompareYearLines(baseRecs, phs);
+      }else{
+        window.__lastChartBuilder = "buildCompareYearBars_XaxisPharmacy";
+        buildCompareYearBars(baseRecs, phs);
+      }
+      setPackungenTitleSuffix();
+      return;
+    }
+  buildChartDescription();
+    applyCompareXAxisStyle();
+  
+
+    if(state.granularity === "year"){
+      fetchAggregate("year", metricField()).then(resp=>{
+      if(__seq !== state.reqSeq) return;
+      let pts = (resp && resp.points) ? resp.points : [];
+        if(state.years && state.years.length){
+          const allowed = new Set(state.years.map(String));
+          pts = pts.filter(p => allowed.has(String(p.x)));
+        }
+        buildChartYearOverlay(pts);
+        buildChartYearContinuous(pts);
+        buildChartDescription();
+    updateChartTitle();
+      }).catch(err=>{
+        console.error(err);
+        toast("Jahr: Fehler beim Laden");
+      });
+
+      // KPIs weiterhin aus Tagesdaten (Filter)
+      updateKpis(computeKpis(recs));
+      return;
+    }
+    
+    // Apothekenvergleich (Schritt 2: Tag/Woche)
+    if(state.mode === "compare" && (state.granularity === "day" || state.granularity === "week" || state.granularity === "month" || state.granularity === "year")){
+      const phs = getComparePharmacies(recs);
+
+      if(state.granularity === "year" && state.chartMode === "overlay"){
+        buildCompareYearBars(baseRecs, phs);
+        setPackungenTitleSuffix();
+        return;
+      }
+
+      // Jahr im Apothekenvergleich: eigener, isolierter Chart-Pfad
+      if(state.granularity === "year"){
+        if(state.chartMode === "continuous"){
+      // lock: clear overlay chart so it cannot overwrite
+      if(window.__ech){ window.__ech.clear(); }
+          buildChartCompareYearContinuous(recs, phs);
+        }else{
+          buildChartCompareYearOverlay(recs, phs);
+        }
+        setPackungenTitleSuffix();
+        return;
+      }
+      if(phs.length < 1){
+        toast("Apothekenvergleich: Bitte mindestens 1 Apotheke auswählen.");
+      }else{
+        // Hinweis bei nur 1 Apotheke wird in der Beschreibung/Hint-Zeile angezeigt.
+        buildChartCompareOverlay(recs, phs);
+        buildChartCompareContinuous(recs, phs);
+        updateKpis(computeKpis(recs));
+        setPackungenTitleSuffix();
+        
+        return;
+      }
+    }
+const seriesByYear = aggregateSeries(recs);
+    buildChart(seriesByYear);
+    buildChartContinuous(recs);
+    updateKpis(computeKpis(recs));
+  
+  buildChartDescription();
+
+  // FINAL OVERRIDE (safety): if compare+year+continuous, render lines AFTER all sync work
+  if(state.mode === "compare" && state.granularity === "year" && state.chartMode === "continuous"){
+    const phs = (typeof getComparePharmacies === "function") ? getComparePharmacies(recs)
+              : (typeof getSelectedPharmaciesUI === "function" ? getSelectedPharmaciesUI().filter(v=>v!=="ALL") : []);
+    setTimeout(() => {
+      try{
+        buildCompareYearLines(baseRecs, phs);
+        window.__lastChartBuilder = "buildCompareYearLines(setTimeout)";
+        updateCompareDebug(recs);
+      }catch(e){ console.error("compare-year continuous override failed", e); }
+    }, 0);
+  }
+
+
+  // CALL_TEST_RENDER_ALWAYS
+  try{
+    if(state.mode==="compare" && state.granularity==="year" && state.chartMode==="continuous"){
+      const baseRecs = (typeof getBaseRecordsForCompare==="function") ? getBaseRecordsForCompare() : (state.records||[]);
+}
+  }catch(e){ console.error(e); }
+
+}
+
+  function setToggle(groupIds, activeId){
+    for(const id of groupIds){
+      el(id).classList.toggle("active", id === activeId);
+    }
+  }
+
+  function initControls(){
+  const setActive = (ids, activeId) => {
+    ids.forEach(id => {
+      const elx = el(id);
+      if(!elx) return;
+      if(id === activeId) elx.classList.add("active");
+      else elx.classList.remove("active");
+    });
+  };
+
+  // Apotheke (Multi-Select oder ALL je nach Version)
+  el("pharmacy")?.addEventListener("change", () => {
+    refreshView();
+    buildChartDescription();
+    updateChartTitle();
+  });
+
+  // Jahre (Multi-Select)
+  el("years")?.addEventListener("change", (e) => {
+    const selected = Array.from(e.target.selectedOptions).map(o => o.value);
+    state.years = selected.length ? selected : state.years;
+    refreshView();
+    buildChartDescription();
+    updateChartTitle();
+  });
+
+  // Auflösung
+  const granIds = ["granYear","granMonth","granWeek","granDay"];
+  granIds.forEach(id => {
+    el(id)?.addEventListener("click", () => {
+      const map = {granYear:"year", granMonth:"month", granWeek:"week", granDay:"day"};
+      state.granularity = map[id] || state.granularity;
+      setActive(granIds, id);
+      refreshView();
+      buildChartDescription();
+    updateChartTitle();
+    });
+  });
+
+  // Chart-Darstellung (Overlay/Fortlaufend)
+  el("btnChartOverlay")?.addEventListener("click", () => { setChartMode("overlay"); });
+  el("btnChartContinuous")?.addEventListener("click", () => { setChartMode("continuous"); });
+
+  // Modus: Summe vs Apothekenvergleich
+  el("btnModeSum")?.addEventListener("click", () => {
+    state.mode = "sum";
+    el("btnModeSum")?.classList.add("active");
+    el("btnModeCompare")?.classList.remove("active");
+    refreshView();
+    buildChartDescription();
+    updateChartTitle();
+  });
+  el("btnModeCompare")?.addEventListener("click", () => {
+    state.mode = "compare";
+    el("btnModeCompare")?.classList.add("active");
+    el("btnModeSum")?.classList.remove("active");
+    refreshView();
+    buildChartDescription();
+    updateChartTitle();
+  });
+
+  // Datumsbereich (Monat/Tag abhängig von Granularity)
+
+  // Weighted / Calendar (falls vorhanden)
+  el("avgWeighted")?.addEventListener("click", () => {
+    state.avgMode = "weighted";
+    // toggle active state
+    el("avgWeighted")?.classList.toggle("active", state.avgMode==="weighted");
+    el("avgCalendar")?.classList.toggle("active", state.avgMode==="calendar");
+    refreshView();
+    buildChartDescription();
+    updateChartTitle();
+  });
+  el("avgCalendar")?.addEventListener("click", () => {
+    state.avgMode = "calendar";
+    // toggle active state
+    el("avgWeighted")?.classList.toggle("active", state.avgMode==="weighted");
+    el("avgCalendar")?.classList.toggle("active", state.avgMode==="calendar");
+    refreshView();
+    buildChartDescription();
+    updateChartTitle();
+  });
+
+  // Manuelles Neuladen
+  el("reloadBtn")?.addEventListener("click", () => {
+    if(typeof loadData === "function") loadData();
+  });
+
+  // Initial active states (best effort)
+  setActive(granIds, state.granularity === "year" ? "granYear" :
+                    state.granularity === "month" ? "granMonth" :
+                    state.granularity === "week" ? "granWeek" : "granDay");
+  if(state.mode === "compare"){
+    el("btnModeCompare")?.classList.add("active");
+    el("btnModeSum")?.classList.remove("active");
+  } else {
+    el("btnModeSum")?.classList.add("active");
+    el("btnModeCompare")?.classList.remove("active");
+  }
+}
+
+  async function loadData(force=false){
+    try{
+      const res = await fetch("/api/data" + (force ? `?t=${Date.now()}` : ""));
+      if(!res.ok){ throw new Error(`HTTP ${res.status}`); }
+      const payload = await res.json();
+
+      state.records = payload.records || [];
+      state.stand = payload.stand || null;
+      state.loaded_files = payload.loaded_files || [];
+
+      const recCount = state.records.length;
+      const fileCount = state.loaded_files.length;
+
+      el("stand").textContent = state.stand ? new Date(state.stand).toLocaleDateString("de-DE") : "–";
+      { const e = el("loaded"); if(e) e.textContent = `Datensätze: ${recCount} • Dateien: ${fileCount}`; }
+
+      const years = Array.from(new Set(state.records.map(r => r.year))).sort((a,b)=>a-b);
+      const yearsSel = el("years");
+      yearsSel.innerHTML = "";
+      for(const y of years){
+        const opt = document.createElement("option");
+        opt.value = String(y);
+        if(opt) opt.textContent = String(y);
+        yearsSel.appendChild(opt);
+      }
+      const defaultYears = years.slice(-2).map(String);
+      state.years = defaultYears.length ? defaultYears : years.map(String);
+      for(const opt of yearsSel.options){
+        opt.selected = state.years.includes(opt.value);
+      }
+
+      refreshView();
+    buildChartDescription();
+    updateChartTitle();
+    }catch(err){
+      console.error(err);
+      { const e = el("loaded"); if(e) e.textContent = `⚠️ Fehler beim Laden der Daten (${err.message || err}). Läuft der Server?`; }
+    }
+  }
+
+  async function fetchAggregate(granularity, metric){
+    const sel = el("pharmacy");
+    let ap = "ALL";
+    if(sel){
+      const vals = Array.from(sel.selectedOptions).map(o => o.value);
+      if(vals.length > 0 && !vals.includes("ALL")){
+        ap = vals.join(",");
+      }
+    }
+    const url = `/api/aggregate?granularity=${encodeURIComponent(granularity)}&metric=${encodeURIComponent(metric)}&apotheke=${encodeURIComponent(ap)}`;
+    const resp = await fetch(url, { cache: "no-store" });
+    if(!resp.ok){
+      const txt = await resp.text();
+      throw new Error(`Aggregate API error ${resp.status}: ${txt}`);
+    }
+    return await resp.json();
+  }
+
+  function buildChartYearOverlay(points){
+    const container = document.getElementById("chart1");
+    const ech = window.__ech || (window.__ech = echarts.init(container));
+    const xs = points.map(p=>p.x);
+    const ys = points.map(p=>p.y);
+    
+
+
+    const selPh = __getSumSelectedPharmacies();
+    let seriesColor = "#FFE600"; // default (mehrere/ALL) = Leuchtgelb
+    try{
+      if(Array.isArray(selPh) && selPh.length===1 && selPh[0] && selPh[0] !== "ALL" && typeof pharmacyColors === "object" && pharmacyColors[selPh[0]]){
+        seriesColor = pharmacyColors[selPh[0]];
+      }
+    }catch(e){}
+
+    ech.setOption({
+      color:[seriesColor],
+      backgroundColor:"transparent",
+      tooltip:{ trigger:"axis", axisPointer:{type:"shadow"}, formatter:(params)=> {
+        const p=params && params[0]; if(!p) return "";
+        return `<b>${p.axisValue}</b><br/>${metricLabel()}: ${fmtMetricTooltip(p.value)}`;
+      }},
+      grid:{left:80,right:18,top:44,bottom:64,containLabel:false},
+      xAxis:{ type:"category", data:xs,
+        name:"Jahr", nameLocation:"middle", nameGap:36,
+        nameTextStyle:{color:"rgba(255,255,255,0.75)", fontSize:12, padding:[18,0,0,0]},
+        axisLine:{lineStyle:{color:"rgba(255,255,255,0.25)"}},
+        axisLabel:{color:"rgba(255,255,255,0.65)", interval:0, hideOverlap:true}
+      },
+      yAxis:{ type:"value",
+        name:metricLabel(), nameLocation:"end", nameGap:14,
+        nameTextStyle:{color:"rgba(255,255,255,0.75)", fontSize:12},
+        splitLine:{lineStyle:{color:"rgba(255,255,255,0.10)"}},
+        axisLabel:{color:"rgba(255,255,255,0.65)", formatter:(v)=>fmtNumDE(v)}
+      },
+      series:[{name:metricLabel(), type:"bar", data:ys, itemStyle:{color: seriesColor}}]
+    }, true);
+  }
+
+  function buildChartYearContinuous(points){
+    const container = document.getElementById("chart2");
+    const ech2 = window.__ech2 || (window.__ech2 = echarts.init(container));
+    const xs = points.map(p=>p.x);
+    const ys = points.map(p=>p.y);
+    const trend = linearTrend(ys);
+    const selPh = __getSumSelectedPharmacies();
+    let seriesColor = "#FFE600"; // default for Summe (ALL / mehrere Apotheken) = Leuchtgelb
+    try{
+      if(Array.isArray(selPh) && selPh.length===1 && selPh[0] && selPh[0] !== "ALL" && typeof pharmacyColors === "object" && pharmacyColors[selPh[0]]){
+        seriesColor = pharmacyColors[selPh[0]];
+      }
+    }catch(e){}
+
+
+    ech2.setOption({
+      backgroundColor:"transparent",
+      tooltip:{ trigger:"axis", axisPointer:{type:"line"}, formatter:(params)=> {
+        const p=params && params[0]; if(!p) return "";
+        return `<b>${p.axisValue}</b><br/>${metricLabel()}: ${fmtMetricTooltip(p.value)}`;
+      }},
+      grid:{left:80,right:18,top:44,bottom:64,containLabel:false},
+      xAxis:{ type:"category", data:xs,
+        name:"Jahr", nameLocation:"middle", nameGap:36,
+        nameTextStyle:{color:"rgba(255,255,255,0.75)", fontSize:12, padding:[18,0,0,0]},
+        axisLine:{lineStyle:{color:"rgba(255,255,255,0.25)"}},
+        axisLabel:{color:"rgba(255,255,255,0.65)", interval:0, hideOverlap:true}
+      },
+      yAxis:{ type:"value",
+        name:metricLabel(), nameLocation:"end", nameGap:14,
+        nameTextStyle:{color:"rgba(255,255,255,0.75)", fontSize:12},
+        splitLine:{lineStyle:{color:"rgba(255,255,255,0.10)"}},
+        axisLabel:{color:"rgba(255,255,255,0.65)", formatter:(v)=>fmtNumDE(v)}
+      },
+      series:[
+        {
+      name:metricLabel(),
+      type:"line",
+      smooth:true,
+      data: ys,
+      showSymbol:true,
+      symbol:"circle",
+      symbolSize:10,
+      symbolAnimation:false,
+      animationDuration:180,
+      animationDurationUpdate:180,
+      lineStyle:{ width:3, color: seriesColor },
+      itemStyle:{ color:"rgba(255,255,255,0.98)", borderWidth:3, borderColor: seriesColor },
+      emphasis:{ itemStyle:{ color:"rgba(255,255,255,0.98)", borderWidth:3, borderColor: seriesColor } }
+    },
+        {name:"Trend", type:"line", showSymbol:false, smooth:false, data:trend, lineStyle:{type:"dotted", width:2}, tooltip:{show:false}}
+      ]
+    }, true);
+  }
+
+
+
+  // Tabs
+  function setActiveTab(key){
+    // key: pack | customers | sales
+    if(key === 'customers') state.metric = 'cust';
+    else if(key === 'sales') state.metric = 'rev';
+    else state.metric = 'pack';
+
+    const tabs = Array.from(document.querySelectorAll('.tab'));
+    tabs.forEach(t => {
+      const active = t.dataset.panel === key;
+      t.classList.toggle('active', active);
+      t.setAttribute('aria-selected', active ? 'true' : 'false');
+    });
+
+    // Keep the main chart panel visible for all metrics (avoids duplicating chart DOM)
+    const panels = Array.from(document.querySelectorAll('.main-panel'));
+    panels.forEach(p => p.classList.toggle('active', p.id === 'panel-pack'));
+
+    try{ renderMetricIcon(); }catch(e){}
+    try{ setPackungenTitleSuffix(); }catch(e){}
+    try{ refreshView(); }catch(e){ console.error(e); }
+    try{ window.__ech?.resize(); window.__ech2?.resize(); }catch(e){}
+  }
+  function initTabs(){
+    const tabs = Array.from(document.querySelectorAll('.tab'));
+    tabs.forEach(t => {
+      t.addEventListener('click', () => setActiveTab(t.dataset.panel));
+      t.addEventListener('keydown', (e) => {
+        if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); setActiveTab(t.dataset.panel); }
+      });
+    });
+  }
+
+  initTabs();
+  initControls();
+  renderMetricIcon();
+  updateChartTitle();
+  loadData(false);
+
+// --- Robust mode toggle binding (safety net) ---
+function bindModeButtons(){
+  const btns = document.querySelectorAll('[data-mode-btn]');
+  btns.forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const m = btn.getAttribute('data-mode-btn');
+      if(!m) return;
+      state.mode = m; // "sum" | "compare"
+      // Visual active state
+      btns.forEach(b=>b.classList.toggle('active', b.getAttribute('data-mode-btn')===m));
+      refreshView();
+    });
+  });
+}
+
+</script>
+<script>bindModeButtons();
+// Fallback click handler (capture) to ensure ChartMode buttons always work
+document.addEventListener("click", (e)=>{
+  const t = e.target;
+  if(!t || !t.getAttribute) return;
+  const id = t.getAttribute("id");
+  if(id === "btnChartContinuous"){
+    e.preventDefault(); e.stopPropagation();
+    try{ setChartMode("continuous"); }catch(err){ console.error(err); }
+  }else if(id === "btnChartOverlay"){
+    e.preventDefault(); e.stopPropagation();
+    try{ setChartMode("overlay"); }catch(err){ console.error(err); }
+  }
+}, true);
+
+</script>
+<!-- FILEMARK_SAFE_COMPARE_XAXIS_POSTPATCH_20260110_151534 -->
+<!-- FILEMARK_COMPARE_TITLE_WRAP_20260110_153739 -->
+<!-- FILEMARK_TONE_DOWN_CONTINUOUS_XAXIS_20260110_161602 -->
+<!-- FILEMARK_COMPARE_XAXIS_TITLE_FIX_20260110_170149 -->
+<!-- FILEMARK_COMPARE_TITLE_UNIFY_20260110_175825 -->
+<!-- FILEMARK_FIX_COMPARE_OVERLAY_TITLE_20260111_074424 -->
+<!-- FILEMARK_FORCE_COMPARE_OVERLAY_XTITLE_V1_20260111_082537 -->
+<!-- FILEMARK_SUM_YEAR_POINTFIX_BUILDER_20260111_115155 -->
+<!-- FILEMARK_SUM_YEAR_POINTSTYLE_20260111_115753 -->
+<!-- FILEMARK_SUM_YEAR_POINTBORDER_20260111_120730 -->
+<!-- FILEMARK_SUM_YEAR_COLORFIX_20260111_122546 -->
+<!-- FILEMARK_SUM_YEAR_SEL_FIX_ANIM0_20260111_131650 -->
+<!-- FILEMARK_SUM_YEAR_FASTANIM_20260111_134510 -->
+<!-- FILEMARK_COMPARE_LABEL_POSFIX_20260111_162810 -->
+<!-- FILEMARK_COMPARE_DAYWEEK_POSFIX3_20260111_164551 -->
+<!-- FILEMARK_COMPARE_CONTINUOUS_MATCH_SUM_20260111_165957 -->
+<!-- FILEMARK_SUM_YEAR_OVERLAY_COLORFIX_20260111_172211 -->
+<!-- FILEMARK_SUM_COLOR_FIX_MWD_20260111_180300 -->
+</body>
+</html>

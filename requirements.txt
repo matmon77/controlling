@@ -1,0 +1,11 @@
+# Controlling-Werkzeuge (Mac): UKP-Dashboard (Flask, pandas), Schnittmenge (pandas, openpyxl).
+# apofolio und die Zubringer brauchen nur die Standardbibliothek.
+#
+# Python-Basis: Homebrew python@3.14 (gepinnt), venv in ~/Produktiv/controlling/.venv –
+# eingerichtet und nachgezogen vom festen Befehl „Holen“ (mac-einrichtung/mac/repos/repos_holen.sh).
+# Bis 24.10.2026 zwei Umgebungen: ~/.venvs/ukp-dashboard (Flask 3.1.2, pandas 2.3.3) und
+# ~/.venvs/vereinigungsmenge (pandas 3.0.0, openpyxl 3.1.5). Gemeinsam jetzt pandas 2.3 wie das
+# Dashboard (beide Skripte nutzen pandas nur einfach); 2.3.3 ist die erste Fassung für Python 3.14.
+Flask>=3.1,<4
+pandas>=2.3.3,<3
+openpyxl>=3.1,<4

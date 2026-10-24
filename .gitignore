@@ -1,0 +1,26 @@
+# Lokale Python-Umgebung – nie ins Repo (baut „Holen“ je Mac aus requirements.txt)
+.venv/
+__pycache__/
+*.py[cod]
+
+# Laufzeitdateien: Protokolle von Dashboard und apofolio (enthalten Geschäftszahlen)
+*.log
+mac/apofolio/logs/
+mac/apofolio/output/
+
+# Daten (Exporte, Auswertungen) liegen in der Nextcloud, nie im Repo
+*.csv
+*.xlsx
+
+# Zugangsdaten nie ins Repo
+.env
+.env.*
+
+# macOS
+.DS_Store
+._*
+Icon?
+
+# Claude-App (lokale Arbeitsdateien)
+.claude/settings.local.json
+.claude/.cc-writes/

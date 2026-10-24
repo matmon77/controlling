@@ -1,0 +1,41 @@
+{
+  "pricing_base_dir": "~/Nextcloud/Controlling/Pricing",
+
+  "input_dir": "input",
+  "flyer_dir": "flyer",
+  "output_dir": "output",
+  "archive_dir": "archive",
+
+  "output_details_subdir": "details",
+  "output_summary_subdir": "summary",
+
+  "flyer_filename_pattern": "{YYYY}_{MM}-FlyerCSV.csv",
+  "input_filename_pattern": "{PHARMACY}{YYYY}{MM}01.csv",
+
+  "pharmacies": [
+    "DAC",
+    "EMS",
+    "NEA",
+    "WIL"
+  ],
+
+  "filter_elac_word": "ELAC",
+
+  "columns": {
+    "pzn": 3,
+    "text": 4,
+    "qty": 8,
+    "evkh": 9,
+    "lvkh": 10,
+    "uvphist": 11,
+    "ap_at": 13
+  },
+
+  "csv": {
+    "delimiter": ";",
+    "decimal": ",",
+    "encoding": "utf-8"
+  },
+
+  "kosten_file": "kosten.csv"
+}
